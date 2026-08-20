@@ -1,10 +1,12 @@
-let accessToken = null;
-let refreshToken = null;
+let accessToken = sessionStorage.getItem("accessToken") || null;
+let refreshToken = sessionStorage.getItem("refreshToken") || null;
 let logoutHandler = () => {};
 
 export function setTokens({ accessToken: at, refreshToken: rt }) {
   accessToken = at;
   refreshToken = rt;
+  sessionStorage.setItem("accessToken", at);
+  sessionStorage.setItem("refreshToken", rt);
 }
 
 export function getAccessToken() {
@@ -18,6 +20,8 @@ export function getRefreshToken() {
 export function clearTokens() {
   accessToken = null;
   refreshToken = null;
+  sessionStorage.removeItem("accessToken");
+  sessionStorage.removeItem("refreshToken");
 }
 
 export function setLogoutHandler(fn) {
