@@ -345,6 +345,9 @@
     "diesel": {
       "title": "Diesel Control",
       "subtitle": "Track diesel stock and consumption",
+      "units": {
+        "hrs": "hrs"
+      },
       "month": "Month",
       "year": "Year",
       "allVehicles": "All Vehicles",
