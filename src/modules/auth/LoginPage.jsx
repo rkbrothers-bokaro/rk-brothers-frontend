@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Globe, Truck } from "lucide-react";
@@ -9,12 +9,20 @@ import Button from "../../core/components/Button";
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
 
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Navigate off of the auth state itself rather than right after `login()`
+  // resolves, so we don't race the setUser() state update.
+  useEffect(() => {
+    if (user) {
+      navigate(user.role === "admin" ? "/dashboard" : "/fleet/daily-log", { replace: true });
+    }
+  }, [user, navigate]);
 
   function toggleLanguage() {
     i18n.changeLanguage(i18n.language === "en" ? "hi" : "en");
@@ -35,9 +43,9 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(phone, password);
-      navigate("/dashboard", { replace: true });
-    } catch {
+    } catch (err) {
       // axios interceptor already surfaces a global error toast
+      console.error("Login failed:", err);
     } finally {
       setIsSubmitting(false);
     }
