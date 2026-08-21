@@ -13,6 +13,7 @@ import { getUsers, createUser, updateUser, resetPassword } from "../../api/admin
 
 const EMPTY_ADD_FORM = { name: "", phone: "", password: "", role: "staff" };
 const EMPTY_EDIT_FORM = { name: "", role: "staff", status: "active" };
+const STATUS_TO_ENABLED = { active: true, inactive: false };
 const EMPTY_PASSWORD_FORM = { newPassword: "", confirmPassword: "" };
 
 export default function UserManagementTab() {
@@ -75,7 +76,11 @@ export default function UserManagementTab() {
 
   function openEditModal(user) {
     setActiveUser(user);
-    setEditForm({ name: user.name || "", role: user.role || "staff", status: user.status || "active" });
+    setEditForm({
+      name: user.name || "",
+      role: user.role || "staff",
+      status: user.isActive === false ? "inactive" : "active",
+    });
     setErrors({});
     setModalMode("edit");
   }
@@ -131,7 +136,7 @@ export default function UserManagementTab() {
       await updateUser(activeUser.id, {
         name: editForm.name.trim(),
         role: editForm.role,
-        status: editForm.status,
+        enabled: STATUS_TO_ENABLED[editForm.status],
       });
       toast.success(t("common.saveSuccess"));
       closeModal();
@@ -168,7 +173,7 @@ export default function UserManagementTab() {
   async function handleDeactivate(user) {
     if (!window.confirm(t("fleet.admin.deactivateConfirm"))) return;
     try {
-      await updateUser(user.id, { name: user.name, role: user.role, status: "inactive" });
+      await updateUser(user.id, { name: user.name, role: user.role, enabled: false });
       toast.success(t("common.deactivateSuccess"));
       fetchUsers();
     } catch {
@@ -184,8 +189,8 @@ export default function UserManagementTab() {
       key: "status",
       header: t("fleet.admin.columns.status"),
       render: (row) => (
-        <Badge variant={row.status === "inactive" ? "zinc" : "green"}>
-          {row.status === "inactive" ? t("common.inactive") : t("common.active")}
+        <Badge variant={row.isActive === false ? "zinc" : "green"}>
+          {row.isActive === false ? t("common.inactive") : t("common.active")}
         </Badge>
       ),
     },

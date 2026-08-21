@@ -8,8 +8,10 @@ function buildListParams({ search, page, pageSize }) {
   };
 }
 
-// Backend wraps every payload as { success, data }. This unwraps that envelope
-// (falling back to an unwrapped body) and normalizes to { items, total }.
+// Backend wraps every payload as { success, data }, and paginated endpoints
+// return a Spring Data Page ({ content, totalElements, ... }) as that data.
+// This unwraps the envelope (falling back to an unwrapped body) and
+// normalizes both that shape and a plain { items, total } shape.
 export function unwrapList(responseBody) {
   const body = responseBody && responseBody.data !== undefined ? responseBody.data : responseBody;
 
@@ -17,9 +19,9 @@ export function unwrapList(responseBody) {
     return { items: body, total: body.length };
   }
 
-  const items = body?.items ?? body?.data ?? [];
+  const items = body?.items ?? body?.content ?? body?.data ?? [];
   const normalizedItems = Array.isArray(items) ? items : [];
-  return { items: normalizedItems, total: body?.total ?? normalizedItems.length };
+  return { items: normalizedItems, total: body?.total ?? body?.totalElements ?? normalizedItems.length };
 }
 
 export const vehiclesApi = {
