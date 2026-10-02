@@ -12,32 +12,36 @@ import BillingPage from "./modules/fleet/pages/BillingPage";
 import DocumentsPage from "./modules/fleet/pages/DocumentsPage";
 import DashboardPage from "./modules/fleet/pages/DashboardPage";
 import AdminPanelPage from "./modules/fleet/pages/AdminPanelPage";
+import DevBackendSwitch from "./core/components/DevBackendSwitch";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
 
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppShell />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/fleet/daily-log" element={<DailyLogPage />} />
-          <Route path="/fleet/diesel" element={<DieselControlPage />} />
-          <Route path="/fleet/billing" element={<BillingPage />} />
-          <Route path="/fleet/documents" element={<DocumentsPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/fleet/daily-log" element={<DailyLogPage />} />
+            <Route path="/fleet/diesel" element={<DieselControlPage />} />
+            <Route path="/fleet/billing" element={<BillingPage />} />
+            <Route path="/fleet/documents" element={<DocumentsPage />} />
 
-          <Route element={<ProtectedRoute adminOnly />}>
-            <Route path="/masters/vehicles" element={<VehiclesPage />} />
-            <Route path="/masters/operators" element={<OperatorsPage />} />
-            <Route path="/masters/parties" element={<PartiesPage />} />
-            <Route path="/masters/work-orders" element={<WorkOrdersPage />} />
-            <Route path="/admin/users" element={<AdminPanelPage />} />
+            <Route element={<ProtectedRoute adminOnly />}>
+              <Route path="/masters/vehicles" element={<VehiclesPage />} />
+              <Route path="/masters/operators" element={<OperatorsPage />} />
+              <Route path="/masters/parties" element={<PartiesPage />} />
+              <Route path="/masters/work-orders" element={<WorkOrdersPage />} />
+              <Route path="/admin/users" element={<AdminPanelPage />} />
+            </Route>
           </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+      <DevBackendSwitch />
+    </>
   );
 }

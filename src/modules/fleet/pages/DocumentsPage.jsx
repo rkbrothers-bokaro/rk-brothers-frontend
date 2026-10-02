@@ -132,7 +132,18 @@ export default function DocumentsPage() {
   }
 
   const vehicleColumns = [
-    { key: "type", header: t("fleet.documents.columns.type"), render: (row) => typeLabel(row.documentType) },
+    { 
+      key: "type", 
+      header: t("fleet.documents.columns.type"), 
+      render: (row) => (
+        <div className="flex flex-col">
+          <span>{typeLabel(row.documentType)}</span>
+          {row.originalFileName && (
+            <span className="text-xs text-zinc-500">{row.originalFileName}</span>
+          )}
+        </div>
+      )
+    },
     { key: "docNo", header: t("fleet.documents.columns.docNo"), render: (row) => row.documentNo || "—" },
     { key: "issued", header: t("fleet.documents.columns.issued"), render: (row) => row.issuedDate || "—" },
     { key: "expiry", header: t("fleet.documents.columns.expiry"), render: (row) => row.expiryDate || "—" },
@@ -185,7 +196,18 @@ export default function DocumentsPage() {
       header: t("fleet.documents.columns.vehicle"),
       render: (row) => row.vehicleDisplayName || row.vehicleNo || "—",
     },
-    { key: "type", header: t("fleet.documents.columns.type"), render: (row) => typeLabel(row.documentType) },
+    { 
+      key: "type", 
+      header: t("fleet.documents.columns.type"), 
+      render: (row) => (
+        <div className="flex flex-col">
+          <span>{typeLabel(row.documentType)}</span>
+          {row.originalFileName && (
+            <span className="text-xs text-zinc-500">{row.originalFileName}</span>
+          )}
+        </div>
+      )
+    },
     { key: "docNo", header: t("fleet.documents.columns.docNo"), render: (row) => row.documentNo || "—" },
     { key: "expiry", header: t("fleet.documents.columns.expiry"), render: (row) => row.expiryDate || "—" },
     {

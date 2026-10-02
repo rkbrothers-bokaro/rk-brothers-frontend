@@ -158,13 +158,27 @@ export default function UploadDocumentModal({ vehicles, preselectedVehicleId, re
       ) : (
         <form onSubmit={handleConfirm} className="flex flex-col gap-4">
           {hasNoAiData ? (
-            <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
-              <Info className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>{t("fleet.documents.upload.noAi")}</span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{t("fleet.documents.upload.noAi")}</span>
+              </div>
+              {uploadedDoc?.originalFileName && (
+                <p className="text-xs font-medium text-blue-600">
+                  File: {uploadedDoc.originalFileName}
+                </p>
+              )}
             </div>
           ) : (
             <>
-              <p className="text-sm text-zinc-600">{t("fleet.documents.upload.aiParsed")}</p>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-zinc-600">{t("fleet.documents.upload.aiParsed")}</p>
+                {uploadedDoc?.originalFileName && (
+                  <p className="text-xs font-medium text-blue-600">
+                    File: {uploadedDoc.originalFileName}
+                  </p>
+                )}
+              </div>
               {needsReview && (
                 <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />

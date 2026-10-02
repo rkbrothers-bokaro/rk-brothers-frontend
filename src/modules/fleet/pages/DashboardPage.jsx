@@ -160,7 +160,12 @@ export default function DashboardPage() {
                     <div key={doc.id ?? idx} className="flex items-center justify-between gap-3 py-2 text-sm">
                       <div>
                         <p className="font-medium text-zinc-800">{doc.vehicleDisplayName || doc.vehicleNo || "—"}</p>
-                        <p className="text-zinc-500">{typeLabel(doc.documentType)}</p>
+                        <p className="text-zinc-500">
+                          {typeLabel(doc.documentType)}
+                          {doc.originalFileName && (
+                            <span className="ml-1 text-xs text-zinc-400">({doc.originalFileName})</span>
+                          )}
+                        </p>
                       </div>
                       <Badge variant={DOCUMENT_STATUS_VARIANT[status]} title={t("fleet.documents.columns.daysLeft")}>
                         {days ?? "—"}

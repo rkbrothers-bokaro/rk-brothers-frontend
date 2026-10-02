@@ -8,7 +8,16 @@ import {
 } from "./tokenStore";
 import { emitToast } from "../hooks/toastBus";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL;
+let baseURL = import.meta.env.VITE_API_BASE_URL;
+
+if (import.meta.env.DEV) {
+  const useDeployed = localStorage.getItem("USE_DEPLOYED_BACKEND") === "true";
+  if (useDeployed) {
+    baseURL = "https://rk-brothers-backend-870959582255.asia-south1.run.app/api/v1";
+  } else {
+    baseURL = "http://localhost:8080/api/v1";
+  }
+}
 
 const axiosInstance = axios.create({ baseURL });
 
