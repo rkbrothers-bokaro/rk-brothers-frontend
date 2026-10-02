@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, Trash2 } from "lucide-react";
+import { CheckCircle2, Trash2, Eye } from "lucide-react";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useToast } from "../../../core/hooks/useToast";
 import PageHeader from "../../../core/components/PageHeader";
@@ -10,7 +10,7 @@ import Table from "../../../core/components/Table";
 import Badge from "../../../core/components/Badge";
 import Button from "../../../core/components/Button";
 import { vehiclesApi, unwrapList } from "../masters/api";
-import { getDocumentsByVehicle, getExpiringDocuments, deleteDocument } from "../api/documentsApi";
+import { getDocumentsByVehicle, getExpiringDocuments, deleteDocument, getFileUrl } from "../api/documentsApi";
 import UploadDocumentModal from "../components/UploadDocumentModal";
 import { daysLeftOf, statusOf, DOCUMENT_STATUS_VARIANT, DOCUMENT_TYPE_KEY_MAP } from "../utils/documentStatus";
 
@@ -42,10 +42,6 @@ export default function DocumentsPage() {
   }, []);
 
   const fetchDocuments = useCallback(async () => {
-    if (!selectedVehicleId) {
-      setDocuments([]);
-      return;
-    }
     setIsLoadingDocs(true);
     try {
       const { data } = await getDocumentsByVehicle(selectedVehicleId);
@@ -131,7 +127,23 @@ export default function DocumentsPage() {
     }
   }
 
+  async function handleView(doc) {
+    try {
+      const { data } = await getFileUrl(doc.id);
+      if (data && data.data) {
+        window.open(data.data, "_blank");
+      }
+    } catch {
+      toast.error(t("common.error"));
+    }
+  }
+
   const vehicleColumns = [
+    {
+      key: "vehicle",
+      header: t("fleet.documents.columns.vehicle"),
+      render: (row) => row.vehicleDisplayName || row.vehicleNo || "—",
+    },
     { 
       key: "type", 
       header: t("fleet.documents.columns.type"), 
@@ -165,6 +177,14 @@ export default function DocumentsPage() {
       header: t("fleet.documents.columns.actions"),
       render: (row) => (
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleView(row)}
+            aria-label={t("common.view")}
+            className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-blue-600"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
           {row.confirmed === false && (
             <button
               type="button"
@@ -223,6 +243,32 @@ export default function DocumentsPage() {
         return <Badge variant={DOCUMENT_STATUS_VARIANT[status]}>{statusLabels[status]}</Badge>;
       },
     },
+    {
+      key: "actions",
+      header: t("fleet.documents.columns.actions"),
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleView(row)}
+            aria-label={t("common.view")}
+            className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-blue-600"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => handleDelete(row)}
+              aria-label={t("common.delete")}
+              className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -231,7 +277,7 @@ export default function DocumentsPage() {
         title={t("fleet.documents.title")}
         subtitle={t("fleet.documents.subtitle")}
         action={
-          isAdmin && activeTab === "vehicle" && selectedVehicleId ? (
+          isAdmin ? (
             <Button onClick={openUploadModal}>{t("fleet.documents.uploadDocument")}</Button>
           ) : null
         }
@@ -263,24 +309,20 @@ export default function DocumentsPage() {
           <div className="mb-4 max-w-sm">
             <Select
               label={t("fleet.documents.selectVehicle")}
+              placeholder="All Vehicles"
+              placeholderSelectable={true}
               options={vehicleOptions}
               value={selectedVehicleId}
               onChange={(e) => setSelectedVehicleId(e.target.value)}
             />
           </div>
 
-          {!selectedVehicleId ? (
-            <div className="rounded-lg border border-zinc-200 bg-white px-4 py-10 text-center text-sm text-zinc-500">
-              {t("fleet.documents.selectVehiclePrompt")}
-            </div>
-          ) : (
-            <Table
-              columns={vehicleColumns}
-              data={documents}
-              loading={isLoadingDocs}
-              emptyMessage={t("fleet.documents.noDocuments")}
-            />
-          )}
+          <Table
+            columns={vehicleColumns}
+            data={documents}
+            loading={isLoadingDocs}
+            emptyMessage={t("fleet.documents.noDocuments")}
+          />
         </div>
       ) : (
         <Table

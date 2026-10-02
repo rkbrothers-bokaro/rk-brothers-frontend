@@ -13,7 +13,7 @@ export function confirmDocument(id, data) {
 }
 
 export function getDocumentsByVehicle(vehicleId) {
-  return axiosInstance.get("/fleet/documents", { params: { vehicleId } });
+  return axiosInstance.get("/fleet/documents", { params: vehicleId ? { vehicleId } : {} });
 }
 
 export function getExpiringDocuments(days) {
@@ -22,4 +22,8 @@ export function getExpiringDocuments(days) {
 
 export function deleteDocument(id) {
   return axiosInstance.delete(`/fleet/documents/${id}`);
+}
+
+export function getFileUrl(id) {
+  return axiosInstance.get(`/fleet/documents/${id}/file`);
 }
