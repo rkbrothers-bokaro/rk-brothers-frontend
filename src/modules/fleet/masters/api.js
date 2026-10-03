@@ -3,8 +3,8 @@ import axiosInstance from "../../../core/api/axiosInstance";
 function buildListParams({ search, page, pageSize }) {
   return {
     search: search || undefined,
-    page,
-    pageSize,
+    page: page > 0 ? page - 1 : 0, // Spring Boot is 0-indexed
+    size: pageSize, // Spring Boot expects 'size' not 'pageSize'
   };
 }
 
@@ -26,7 +26,7 @@ export function unwrapList(responseBody) {
 
 export const vehiclesApi = {
   list: (params) => axiosInstance.get("/masters/vehicles", { params: buildListParams(params) }),
-  listAll: () => axiosInstance.get("/masters/vehicles", { params: { pageSize: 1000 } }),
+  listAll: () => axiosInstance.get("/masters/vehicles", { params: { size: 1000 } }),
   create: (payload) => axiosInstance.post("/masters/vehicles", payload),
   update: (id, payload) => axiosInstance.put(`/masters/vehicles/${id}`, payload),
   deactivate: (id) => axiosInstance.patch(`/masters/vehicles/${id}/deactivate`),
@@ -34,7 +34,7 @@ export const vehiclesApi = {
 
 export const operatorsApi = {
   list: (params) => axiosInstance.get("/masters/operators", { params: buildListParams(params) }),
-  listAll: () => axiosInstance.get("/masters/operators", { params: { pageSize: 1000 } }),
+  listAll: () => axiosInstance.get("/masters/operators", { params: { size: 1000 } }),
   create: (payload) => axiosInstance.post("/masters/operators", payload),
   update: (id, payload) => axiosInstance.put(`/masters/operators/${id}`, payload),
   deactivate: (id) => axiosInstance.patch(`/masters/operators/${id}/deactivate`),
@@ -42,7 +42,7 @@ export const operatorsApi = {
 
 export const partiesApi = {
   list: (params) => axiosInstance.get("/masters/parties", { params: buildListParams(params) }),
-  listAll: () => axiosInstance.get("/masters/parties", { params: { pageSize: 1000 } }),
+  listAll: () => axiosInstance.get("/masters/parties", { params: { size: 1000 } }),
   create: (payload) => axiosInstance.post("/masters/parties", payload),
   update: (id, payload) => axiosInstance.put(`/masters/parties/${id}`, payload),
   deactivate: (id) => axiosInstance.patch(`/masters/parties/${id}/deactivate`),
@@ -50,7 +50,7 @@ export const partiesApi = {
 
 export const workOrdersApi = {
   list: (params) => axiosInstance.get("/masters/work-orders", { params: buildListParams(params) }),
-  listAll: () => axiosInstance.get("/masters/work-orders", { params: { pageSize: 1000 } }),
+  listAll: () => axiosInstance.get("/masters/work-orders", { params: { size: 1000 } }),
   create: (payload) => axiosInstance.post("/masters/work-orders", payload),
   update: (id, payload) => axiosInstance.put(`/masters/work-orders/${id}`, payload),
   deactivate: (id) => axiosInstance.patch(`/masters/work-orders/${id}/deactivate`),

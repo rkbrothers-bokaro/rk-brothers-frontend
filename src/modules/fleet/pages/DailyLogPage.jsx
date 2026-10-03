@@ -73,7 +73,7 @@ export default function DailyLogPage() {
         operatorId: isAdmin ? appliedFilters.operatorId || undefined : undefined,
         startDate: appliedFilters.startDate || undefined,
         endDate: appliedFilters.endDate || undefined,
-        page,
+        page: page > 0 ? page - 1 : 0,
         size: PAGE_SIZE,
       };
       const { data } = activeTab === "jcb" ? await getJcbLogs(params) : await getTipperLogs(params);
