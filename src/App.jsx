@@ -13,6 +13,7 @@ import DocumentsPage from "./modules/fleet/pages/DocumentsPage";
 import DashboardPage from "./modules/fleet/pages/DashboardPage";
 import AdminPanelPage from "./modules/fleet/pages/AdminPanelPage";
 import DevBackendSwitch from "./core/components/DevBackendSwitch";
+import MastersLayout from "./modules/fleet/masters/MastersLayout";
 
 export default function App() {
   return (
@@ -30,10 +31,12 @@ export default function App() {
             <Route path="/fleet/documents" element={<DocumentsPage />} />
 
             <Route element={<ProtectedRoute adminOnly />}>
-              <Route path="/masters/vehicles" element={<VehiclesPage />} />
-              <Route path="/masters/operators" element={<OperatorsPage />} />
-              <Route path="/masters/parties" element={<PartiesPage />} />
-              <Route path="/masters/work-orders" element={<WorkOrdersPage />} />
+              <Route element={<MastersLayout />}>
+                <Route path="/masters/vehicles" element={<VehiclesPage />} />
+                <Route path="/masters/operators" element={<OperatorsPage />} />
+                <Route path="/masters/parties" element={<PartiesPage />} />
+                <Route path="/masters/work-orders" element={<WorkOrdersPage />} />
+              </Route>
               <Route path="/admin/users" element={<AdminPanelPage />} />
             </Route>
           </Route>
