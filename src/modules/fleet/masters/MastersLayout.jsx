@@ -14,14 +14,14 @@ export default function MastersLayout() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="mb-6 flex gap-4 border-b border-zinc-200 overflow-x-auto pb-[-1px]">
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-zinc-200">
         {tabs.map((tab) => {
           const isActive = location.pathname.startsWith(tab.path);
           return (
             <Link
               key={tab.path}
               to={tab.path}
-              className={`whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 isActive
                   ? "border-blue-600 text-blue-700"
                   : "border-transparent text-zinc-500 hover:border-zinc-300 hover:text-zinc-700"

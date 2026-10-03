@@ -237,7 +237,7 @@ export default function DailyLogPage() {
         action={<Button onClick={openAddModal}>{t("fleet.dailyLog.addEntry")}</Button>}
       />
 
-      <div className="mb-4 flex gap-2 border-b border-zinc-200">
+      <div className="mb-4 flex flex-wrap gap-2 border-b border-zinc-200">
         <button
           type="button"
           onClick={() => handleTabChange("jcb")}
