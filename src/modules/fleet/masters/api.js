@@ -29,7 +29,7 @@ export const vehiclesApi = {
   listAll: () => axiosInstance.get("/masters/vehicles", { params: { size: 1000 } }),
   create: (payload) => axiosInstance.post("/masters/vehicles", payload),
   update: (id, payload) => axiosInstance.put(`/masters/vehicles/${id}`, payload),
-  deactivate: (id) => axiosInstance.patch(`/masters/vehicles/${id}/deactivate`),
+  deactivate: (id) => axiosInstance.delete(`/masters/vehicles/${id}`),
 };
 
 export const operatorsApi = {
@@ -37,7 +37,7 @@ export const operatorsApi = {
   listAll: () => axiosInstance.get("/masters/operators", { params: { size: 1000 } }),
   create: (payload) => axiosInstance.post("/masters/operators", payload),
   update: (id, payload) => axiosInstance.put(`/masters/operators/${id}`, payload),
-  deactivate: (id) => axiosInstance.patch(`/masters/operators/${id}/deactivate`),
+  deactivate: (id) => axiosInstance.delete(`/masters/operators/${id}`),
 };
 
 export const partiesApi = {
@@ -45,7 +45,7 @@ export const partiesApi = {
   listAll: () => axiosInstance.get("/masters/parties", { params: { size: 1000 } }),
   create: (payload) => axiosInstance.post("/masters/parties", payload),
   update: (id, payload) => axiosInstance.put(`/masters/parties/${id}`, payload),
-  deactivate: (id) => axiosInstance.patch(`/masters/parties/${id}/deactivate`),
+  deactivate: (id) => axiosInstance.delete(`/masters/parties/${id}`),
 };
 
 export const workOrdersApi = {
@@ -53,5 +53,5 @@ export const workOrdersApi = {
   listAll: () => axiosInstance.get("/masters/work-orders", { params: { size: 1000 } }),
   create: (payload) => axiosInstance.post("/masters/work-orders", payload),
   update: (id, payload) => axiosInstance.put(`/masters/work-orders/${id}`, payload),
-  deactivate: (id) => axiosInstance.patch(`/masters/work-orders/${id}/deactivate`),
+  deactivate: (id) => axiosInstance.delete(`/masters/work-orders/${id}`),
 };
