@@ -8,7 +8,7 @@ import Select from "../../../core/components/Select";
 import DatePicker from "../../../core/components/DatePicker";
 import FileUpload from "../../../core/components/FileUpload";
 import Button from "../../../core/components/Button";
-import { getJcbOpeningHrs, createJcbLog, updateJcbLog } from "../api/dailyLogApi";
+import { getJcbOpeningHrs, createJcbLog, updateJcbLog, uploadSlip } from "../api/dailyLogApi";
 
 function todayStr() {
   const d = new Date();
