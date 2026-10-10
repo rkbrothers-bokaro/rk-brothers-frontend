@@ -196,6 +196,18 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
 
     setIsSaving(true);
     try {
+      let slipUrl = formData.receivingSlipUrl;
+      if (formData.receivingSlip instanceof File) {
+        try {
+          const res = await uploadSlip(formData.receivingSlip);
+          slipUrl = res.data.data.url;
+        } catch (err) {
+          toast.error("Failed to upload slip");
+          setIsSaving(false);
+          return;
+        }
+      }
+
       const payload = {
         date: formData.date,
         vehicleId: formData.vehicleId,
@@ -221,7 +233,7 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
             tripCount: row.tripCount === "" ? null : Number(row.tripCount),
           })),
         workDescription: formData.workDescription,
-        receivingSlip: formData.receivingSlip instanceof File ? formData.receivingSlip : undefined,
+        receivingSlipUrl: slipUrl || null,
       };
 
       if (isEdit && initialData) {

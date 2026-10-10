@@ -15,6 +15,15 @@ function buildFormData(payload) {
   return formData;
 }
 
+export function uploadSlip(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", "slips");
+  return axiosInstance.post("/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+}
+
 export function getJcbOpeningHrs(vehicleId, date) {
   return axiosInstance.get("/fleet/jcb-log/opening-hrs", { params: { vehicleId, date } });
 }
