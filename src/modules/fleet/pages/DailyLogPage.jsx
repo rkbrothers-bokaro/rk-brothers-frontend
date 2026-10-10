@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, FileText } from "lucide-react";
 import { useAuth } from "../../../core/hooks/useAuth";
 import { useToast } from "../../../core/hooks/useToast";
 import PageHeader from "../../../core/components/PageHeader";
@@ -161,6 +161,21 @@ export default function DailyLogPage() {
   function operatorLabel(row) {
     const id = row.operatorId || row.driverId;
     return row.operatorName || row.driverName || operators.find((op) => op.id === id)?.name || "—";
+  }
+
+  function renderSlipAction(row) {
+    if (!row.receivingSlipUrl) return <span className="text-zinc-400">-</span>;
+    return (
+      <a
+        href={row.receivingSlipUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded p-1.5 text-blue-500 hover:bg-blue-50 inline-block"
+        title="View Slip"
+      >
+        <FileText className="h-4 w-4" />
+      </a>
+    );
   }
 
   function renderActions(row) {
