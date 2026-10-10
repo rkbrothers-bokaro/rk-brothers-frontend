@@ -378,48 +378,6 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
         </div>
 
         <div className="flex flex-col gap-4">
-          <SectionTitle>{t("fleet.dailyLog.form.diesel")}</SectionTitle>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-            <Input
-              label={t("fleet.dailyLog.form.dieselLtr")}
-              type="number"
-              step="0.01"
-              value={formData.dieselLtr}
-              onChange={(e) => updateField("dieselLtr", e.target.value)}
-              disabled={isSaving || isReadOnly}
-            />
-            <Input
-              label={t("fleet.dailyLog.form.dieselHrs")}
-              type="number"
-              step="0.01"
-              value={formData.dieselHrs}
-              onChange={(e) => updateField("dieselHrs", e.target.value)}
-              disabled={isSaving || isReadOnly}
-            />
-            <Input
-              label={t("fleet.dailyLog.form.dieselKm")}
-              type="number"
-              step="0.01"
-              value={formData.dieselKm}
-              onChange={(e) => updateField("dieselKm", e.target.value)}
-              disabled={isSaving || isReadOnly}
-            />
-            <Input
-              label={t("fleet.dailyLog.form.runKm")}
-              type="number"
-              step="0.01"
-              value={formData.runKm}
-              onChange={(e) => updateField("runKm", e.target.value)}
-              disabled={isSaving || isReadOnly}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.avgKmLtr")}</span>
-            <div className="text-lg font-semibold text-zinc-800">{avgKmLtr !== null ? avgKmLtr.toFixed(2) : "—"}</div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <SectionTitle>{t("fleet.dailyLog.form.trips")}</SectionTitle>
             {!isReadOnly && (
@@ -500,6 +458,48 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
               onChange={(file) => updateField("receivingSlip", file)}
             />
           )}
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <SectionTitle>{t("fleet.dailyLog.form.diesel")}</SectionTitle>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+            <Input
+              label={t("fleet.dailyLog.form.dieselLtr")}
+              type="number"
+              step="0.01"
+              value={formData.dieselLtr}
+              onChange={(e) => updateField("dieselLtr", e.target.value)}
+              disabled={isSaving || isReadOnly}
+            />
+            <Input
+              label={t("fleet.dailyLog.form.dieselHrs")}
+              type="number"
+              step="0.01"
+              value={formData.dieselHrs}
+              onChange={(e) => updateField("dieselHrs", e.target.value)}
+              disabled={isSaving || isReadOnly}
+            />
+            <Input
+              label={t("fleet.dailyLog.form.dieselKm")}
+              type="number"
+              step="0.01"
+              value={formData.dieselKm}
+              onChange={(e) => updateField("dieselKm", e.target.value)}
+              disabled={isSaving || isReadOnly}
+            />
+            <Input
+              label={t("fleet.dailyLog.form.runKm")}
+              type="number"
+              step="0.01"
+              value={formData.runKm}
+              onChange={(e) => updateField("runKm", e.target.value)}
+              disabled={isSaving || isReadOnly}
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.avgKmLtr")}</span>
+            <div className="text-lg font-semibold text-zinc-800">{avgKmLtr !== null ? avgKmLtr.toFixed(2) : "—"}</div>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">

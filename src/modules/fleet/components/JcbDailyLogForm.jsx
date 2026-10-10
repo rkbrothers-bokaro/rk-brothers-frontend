@@ -109,17 +109,7 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
   const workOrderOptions = useMemo(() => workOrders.map((w) => ({ value: w.id, label: w.woNumber })), [workOrders]);
   const operatorOptions = useMemo(() => operators.map((op) => ({ value: op.id, label: op.name })), [operators]);
 
-  const materialTypeOptions = useMemo(
-    () => [
-      { value: "g_slag", label: t("fleet.dailyLog.materialTypes.gSlag") },
-      { value: "hss", label: t("fleet.dailyLog.materialTypes.hss") },
-      { value: "pellet", label: t("fleet.dailyLog.materialTypes.pellet") },
-      { value: "other", label: t("fleet.dailyLog.materialTypes.other") },
-    ],
-    [t],
-  );
-
-  const unitOptions = useMemo(
+    const unitOptions = useMemo(
     () => [
       { value: "mt", label: t("fleet.dailyLog.units.mt") },
       { value: "cbm", label: t("fleet.dailyLog.units.cbm") },
@@ -374,6 +364,32 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
         </div>
 
         <div className="flex flex-col gap-4">
+          <SectionTitle>{t("fleet.dailyLog.form.workDetails")}</SectionTitle>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.workDescription")}</label>
+            <textarea
+              rows={3}
+              value={formData.workDescription}
+              onChange={(e) => updateField("workDescription", e.target.value)}
+              disabled={isSaving || isReadOnly}
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
+            />
+          </div>
+          {isReadOnly ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.receivingSlip")}</span>
+              <p className="text-sm text-zinc-500">{formData.receivingSlipUrl || "—"}</p>
+            </div>
+          ) : (
+            <FileUpload
+              label={t("fleet.dailyLog.form.receivingSlip")}
+              accept="image/*,application/pdf"
+              onChange={(file) => updateField("receivingSlip", file)}
+            />
+          )}
+        </div>
+
+        <div className="flex flex-col gap-4">
           <SectionTitle>{t("fleet.dailyLog.form.diesel")}</SectionTitle>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Input
@@ -412,9 +428,9 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
         <div className="flex flex-col gap-4">
           <SectionTitle>{t("fleet.dailyLog.form.material")}</SectionTitle>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Select
+            <Input
               label={t("fleet.dailyLog.form.materialType")}
-              options={materialTypeOptions}
+              placeholder={t("fleet.dailyLog.form.materialType") || "Enter material type"}
               value={formData.materialType}
               onChange={(e) => updateField("materialType", e.target.value)}
               disabled={isSaving || isReadOnly}
@@ -435,32 +451,6 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
               disabled={isSaving || isReadOnly}
             />
           </div>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <SectionTitle>{t("fleet.dailyLog.form.workDetails")}</SectionTitle>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.workDescription")}</label>
-            <textarea
-              rows={3}
-              value={formData.workDescription}
-              onChange={(e) => updateField("workDescription", e.target.value)}
-              disabled={isSaving || isReadOnly}
-              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
-            />
-          </div>
-          {isReadOnly ? (
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.receivingSlip")}</span>
-              <p className="text-sm text-zinc-500">{formData.receivingSlipUrl || "—"}</p>
-            </div>
-          ) : (
-            <FileUpload
-              label={t("fleet.dailyLog.form.receivingSlip")}
-              accept="image/*,application/pdf"
-              onChange={(file) => updateField("receivingSlip", file)}
-            />
-          )}
         </div>
 
         <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">
