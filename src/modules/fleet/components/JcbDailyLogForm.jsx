@@ -89,7 +89,7 @@ function SectionTitle({ children }) {
   return <h3 className="text-sm font-semibold text-zinc-900">{children}</h3>;
 }
 
-export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrders, operators, onClose, onSaved }) {
+export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrders, operators, onClose, onSaved, canEdit, onEdit }) {
   const { t } = useTranslation();
   const toast = useToast();
   const isReadOnly = mode === "view";
