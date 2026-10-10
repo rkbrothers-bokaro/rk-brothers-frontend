@@ -20,7 +20,7 @@ export function getJcbOpeningHrs(vehicleId, date) {
 }
 
 export function createJcbLog(data) {
-  return axiosInstance.post("/fleet/jcb-log", buildFormData(data));
+  return axiosInstance.post("/fleet/jcb-log", data);
 }
 
 export function getJcbLogs(filters) {
@@ -28,7 +28,7 @@ export function getJcbLogs(filters) {
 }
 
 export function updateJcbLog(id, data) {
-  return axiosInstance.put(`/fleet/jcb-log/${id}`, buildFormData(data));
+  return axiosInstance.put(`/fleet/jcb-log/${id}`, data);
 }
 
 export function deleteJcbLog(id) {
@@ -40,7 +40,7 @@ export function getTipperOpeningHrs(vehicleId, date) {
 }
 
 export function createTipperLog(data) {
-  return axiosInstance.post("/fleet/tipper-log", buildFormData(data));
+  return axiosInstance.post("/fleet/tipper-log", data);
 }
 
 export function getTipperLogs(filters) {
@@ -48,7 +48,7 @@ export function getTipperLogs(filters) {
 }
 
 export function updateTipperLog(id, data) {
-  return axiosInstance.put(`/fleet/tipper-log/${id}`, buildFormData(data));
+  return axiosInstance.put(`/fleet/tipper-log/${id}`, data);
 }
 
 export function deleteTipperLog(id) {
