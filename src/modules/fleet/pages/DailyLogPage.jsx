@@ -216,6 +216,7 @@ export default function DailyLogPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const jcbColumns = [
+    { key: "actions", header: t("fleet.dailyLog.columns.actions"), render: renderActions },
     { key: "date", header: t("fleet.dailyLog.columns.date") },
     { key: "vehicle", header: t("fleet.dailyLog.columns.vehicle"), render: vehicleLabel },
     { key: "operator", header: t("fleet.dailyLog.columns.operator"), render: operatorLabel },
@@ -223,12 +224,13 @@ export default function DailyLogPage() {
     { key: "openingHrs", header: t("fleet.dailyLog.columns.openingHrs"), render: (row) => row.openingHrs ?? "—" },
     { key: "closingHrs", header: t("fleet.dailyLog.columns.closingHrs"), render: (row) => row.closingHrs ?? "—" },
     { key: "totalHrs", header: t("fleet.dailyLog.columns.totalHrs"), render: (row) => row.totalHrs ?? "—" },
-    { key: "diesel", header: t("fleet.dailyLog.columns.diesel"), render: (row) => row.dieselFilled ?? "—" },
-    { key: "avg", header: t("fleet.dailyLog.columns.avg"), render: (row) => row.fuelAvg ?? "—" },
-    { key: "actions", header: t("fleet.dailyLog.columns.actions"), render: renderActions },
+    { key: "diesel", header: t("fleet.dailyLog.columns.diesel"), render: (row) => row.dieselLtr ?? "—" },
+    { key: "avg", header: t("fleet.dailyLog.columns.avg"), render: (row) => row.avgLtrPerHr ?? "—" },
+    { key: "slip", header: "Slip", render: renderSlipAction },
   ];
 
   const tipperColumns = [
+    { key: "actions", header: t("fleet.dailyLog.columns.actions"), render: renderActions },
     { key: "date", header: t("fleet.dailyLog.columns.date") },
     { key: "vehicle", header: t("fleet.dailyLog.columns.vehicle"), render: vehicleLabel },
     { key: "driver", header: t("fleet.dailyLog.columns.driver"), render: operatorLabel },
@@ -237,7 +239,7 @@ export default function DailyLogPage() {
     { key: "totalKm", header: t("fleet.dailyLog.columns.totalKm"), render: (row) => row.totalKm ?? "—" },
     { key: "diesel", header: t("fleet.dailyLog.columns.diesel"), render: (row) => row.dieselLtr ?? "—" },
     { key: "trips", header: t("fleet.dailyLog.columns.trips"), render: (row) => row.totalTrips ?? "—" },
-    { key: "actions", header: t("fleet.dailyLog.columns.actions"), render: renderActions },
+    { key: "slip", header: "Slip", render: renderSlipAction },
   ];
 
   const vehicleOptions = activeVehicles.map((v) => ({ value: v.id, label: v.displayName || v.vehicleNo }));
