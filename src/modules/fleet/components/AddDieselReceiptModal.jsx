@@ -6,7 +6,7 @@ import Input from "../../../core/components/Input";
 import Select from "../../../core/components/Select";
 import DatePicker from "../../../core/components/DatePicker";
 import Button from "../../../core/components/Button";
-import { createReceipt } from "../api/dieselApi";
+import { updateReceipt, createReceipt } from "../api/dieselApi";
 
 function todayStr() {
   const d = new Date();
@@ -16,16 +16,16 @@ function todayStr() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export default function AddDieselReceiptModal({ vehicles, onClose, onSaved }) {
+export default function AddDieselReceiptModal({ vehicles, onClose, onSaved, initialData }) {
   const { t } = useTranslation();
   const toast = useToast();
 
   const [formData, setFormData] = useState({
-    date: todayStr(),
-    vehicleId: "",
-    litres: "",
-    receivedFrom: "",
-    invoiceNo: "",
+    date: initialData?.date || todayStr(),
+    vehicleId: initialData?.vehicleId || "",
+    litres: initialData?.litres || "",
+    receivedFrom: initialData?.receivedFrom || "",
+    invoiceNo: initialData?.invoiceNo || "",
   });
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -50,13 +50,19 @@ export default function AddDieselReceiptModal({ vehicles, onClose, onSaved }) {
 
     setIsSaving(true);
     try {
-      await createReceipt({
+      const payload = {
         date: formData.date,
         vehicleId: formData.vehicleId,
         litres: Number(formData.litres),
         receivedFrom: formData.receivedFrom.trim(),
         invoiceNo: formData.invoiceNo.trim(),
-      });
+      };
+      
+      if (initialData) {
+        await updateReceipt(initialData.id, payload);
+      } else {
+        await createReceipt(payload);
+      }
       toast.success(t("common.saveSuccess"));
       onSaved?.();
     } catch {
@@ -67,7 +73,7 @@ export default function AddDieselReceiptModal({ vehicles, onClose, onSaved }) {
   }
 
   return (
-    <Modal title={t("fleet.diesel.form.addTitle")} onClose={onClose} size="md">
+    <Modal title={initialData ? "Edit Diesel Receipt" : t("fleet.diesel.form.addTitle")} onClose={onClose} size="md">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <DatePicker
           label={t("fleet.diesel.form.date")}

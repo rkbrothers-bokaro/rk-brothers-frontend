@@ -8,6 +8,10 @@ export function getReceipts(vehicleId, month, year) {
   return axiosInstance.get("/fleet/diesel/receipts", { params: { vehicleId, month, year } });
 }
 
+export function updateReceipt(id, data) {
+  return axiosInstance.put(`/fleet/diesel/receipts/${id}`, data);
+}
+
 export function deleteReceipt(id) {
   return axiosInstance.delete(`/fleet/diesel/receipts/${id}`);
 }

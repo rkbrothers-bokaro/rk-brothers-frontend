@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "../../../core/hooks/useAuth";
 import PageHeader from "../../../core/components/PageHeader";
 import Select from "../../../core/components/Select";
 import Table from "../../../core/components/Table";
 import Button from "../../../core/components/Button";
 import { vehiclesApi, unwrapList } from "../masters/api";
-import { getDieselRegister, getFuelAnomalies } from "../api/dieselApi";
+import { getDieselRegister, getFuelAnomalies, getReceipts, deleteReceipt } from "../api/dieselApi";
 import AddDieselReceiptModal from "../components/AddDieselReceiptModal";
 
 const now = new Date();
@@ -18,6 +18,11 @@ const CURRENT_YEAR = now.getFullYear();
 export default function DieselControlPage() {
   const { t } = useTranslation();
   const { isAdmin } = useAuth();
+
+  const toast = useToast();
+  const [activeTab, setActiveTab] = useState("register");
+  const [receipts, setReceipts] = useState([]);
+  const [editingReceipt, setEditingReceipt] = useState(null);
 
   const [vehicles, setVehicles] = useState([]);
   const [filters, setFilters] = useState({ month: CURRENT_MONTH, year: CURRENT_YEAR, vehicleId: "" });
@@ -79,6 +84,28 @@ export default function DieselControlPage() {
     fetchRegister();
   }, [fetchRegister]);
 
+  
+  const fetchReceiptsList = useCallback(async () => {
+    if (!isAdmin) return;
+    setIsLoading(true);
+    try {
+      const { data } = await getReceipts(
+        appliedFilters.vehicleId || undefined,
+        appliedFilters.month,
+        appliedFilters.year
+      );
+      setReceipts(unwrapList(data).items);
+    } catch {
+      setReceipts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [appliedFilters, isAdmin]);
+
+  useEffect(() => {
+    if (activeTab === "receipts") fetchReceiptsList();
+  }, [activeTab, fetchReceiptsList]);
+
   const fetchAnomalies = useCallback(async () => {
     if (!isAdmin) return;
     try {
@@ -118,6 +145,41 @@ export default function DieselControlPage() {
     const issue = Number(row.hsdIssue) || 0;
     return received > 0 || issue > 0;
   });
+
+  
+  async function handleDeleteReceipt(id) {
+    if (!window.confirm(t("common.deleteConfirm") || "Are you sure you want to delete this?")) return;
+    try {
+      await deleteReceipt(id);
+      toast.success(t("common.deleteSuccess") || "Deleted successfully");
+      fetchReceiptsList();
+      fetchRegister();
+    } catch {
+      // toast shown by interceptor
+    }
+  }
+
+  const receiptsColumns = [
+    { key: "date", header: t("fleet.diesel.columns.date") || "Date" },
+    { key: "vehicleDisplayName", header: t("fleet.diesel.columns.equipment") || "Equipment", render: (r) => r.vehicleDisplayName || r.vehicleNo },
+    { key: "litres", header: t("fleet.diesel.form.litres") || "Litres" },
+    { key: "receivedFrom", header: t("fleet.diesel.form.receivedFrom") || "Received From" },
+    { key: "invoiceNo", header: t("fleet.diesel.form.invoiceNo") || "Invoice No" },
+    {
+      key: "actions",
+      header: "Actions",
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => { setEditingReceipt(row); setIsModalOpen(true); }} className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-blue-600">
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => handleDeleteReceipt(row.id)} className="rounded p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-red-600">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ),
+    }
+  ];
 
   const columns = [
     { key: "date", header: t("fleet.diesel.columns.date") },
@@ -208,6 +270,28 @@ export default function DieselControlPage() {
         </div>
       )}
 
+
+      <div className="mb-4 flex gap-2 border-b border-zinc-200">
+        <button
+          type="button"
+          onClick={() => setActiveTab("register")}
+          className={`px-4 py-2 text-sm font-medium ${
+            activeTab === "register" ? "border-b-2 border-blue-600 text-blue-700" : "text-zinc-500 hover:text-zinc-700"
+          }`}
+        >
+          {t("fleet.diesel.registerTab") || "Monthly Register"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("receipts")}
+          className={`px-4 py-2 text-sm font-medium ${
+            activeTab === "receipts" ? "border-b-2 border-blue-600 text-blue-700" : "text-zinc-500 hover:text-zinc-700"
+          }`}
+        >
+          {t("fleet.diesel.receiptsTab") || "Receipts History"}
+        </button>
+      </div>
+
       <div className="mb-4 grid grid-cols-1 gap-3 rounded-lg border border-zinc-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
         <Select
           label={t("fleet.diesel.month")}
@@ -234,19 +318,28 @@ export default function DieselControlPage() {
         </div>
       </div>
 
-      <Table columns={columns} data={visibleRows} loading={isLoading} emptyMessage={t("fleet.diesel.noData")} />
+      
+      {activeTab === "register" ? (
+        <Table columns={columns} data={visibleRows} loading={isLoading} emptyMessage={t("fleet.diesel.noData")} />
+      ) : (
+        <Table columns={receiptsColumns} data={receipts} loading={isLoading} emptyMessage={t("fleet.diesel.noData")} />
+      )}
+
 
       <div className="mt-6 flex justify-end">
-        <Button onClick={() => setIsModalOpen(true)}>{t("fleet.diesel.addReceipt")}</Button>
+        <Button onClick={() => { setEditingReceipt(null); setIsModalOpen(true); }}>{t("fleet.diesel.addReceipt")}</Button>
       </div>
 
       {isModalOpen && (
         <AddDieselReceiptModal
           vehicles={vehicles}
-          onClose={() => setIsModalOpen(false)}
+          initialData={editingReceipt}
+          onClose={() => { setIsModalOpen(false); setEditingReceipt(null); }}
           onSaved={() => {
             setIsModalOpen(false);
+            setEditingReceipt(null);
             fetchRegister();
+            if (activeTab === "receipts") fetchReceiptsList();
             fetchAnomalies();
           }}
         />
