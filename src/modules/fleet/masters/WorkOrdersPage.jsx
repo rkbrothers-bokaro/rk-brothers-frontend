@@ -17,7 +17,7 @@ const PAGE_SIZE = 10;
 
 const EMPTY_FORM = {
   woNumber: "",
-  partyId: "",
+  partyName: "",
   description: "",
   site: "",
   billingBasis: "",
@@ -128,7 +128,7 @@ export default function WorkOrdersPage() {
     setEditingItem(item);
     setFormData({
       woNumber: item.woNumber || "",
-      partyId: item.partyId || "",
+      partyName: item.partyName || "",
       description: item.description || "",
       site: item.site || "",
       billingBasis: item.billingBasis || "",
@@ -157,7 +157,7 @@ export default function WorkOrdersPage() {
     e.preventDefault();
     const nextErrors = {};
     if (!formData.woNumber.trim()) nextErrors.woNumber = t("common.required");
-    if (!formData.partyId) nextErrors.partyId = t("common.required");
+    if (!formData.partyName.trim()) nextErrors.partyName = t("common.required");
     if (!formData.billingBasis) nextErrors.billingBasis = t("common.required");
     setFormErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -166,7 +166,7 @@ export default function WorkOrdersPage() {
     try {
       const payload = {
         woNumber: formData.woNumber.trim(),
-        partyId: formData.partyId,
+        partyName: formData.partyName.trim(),
         description: formData.description.trim(),
         site: formData.site.trim(),
         billingBasis: formData.billingBasis,
@@ -289,12 +289,12 @@ export default function WorkOrdersPage() {
                 error={formErrors.woNumber}
                 disabled={isSaving}
               />
-              <Select
+              <Input
                 label={t("masters.workOrders.form.party")}
-                options={partyOptions}
-                value={formData.partyId}
-                onChange={(e) => setFormData((f) => ({ ...f, partyId: e.target.value }))}
-                error={formErrors.partyId}
+                placeholder={t("masters.workOrders.form.party") || "Enter party name"}
+                value={formData.partyName}
+                onChange={(e) => setFormData((f) => ({ ...f, partyName: e.target.value }))}
+                error={formErrors.partyName}
                 disabled={isSaving}
               />
             </div>
