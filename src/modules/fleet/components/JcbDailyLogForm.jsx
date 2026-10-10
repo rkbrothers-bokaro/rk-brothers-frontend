@@ -194,7 +194,7 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
           const res = await uploadSlip(formData.receivingSlip);
           slipUrl = res.data.data.url;
         } catch (err) {
-          toast.error("Failed to upload slip");
+          toast.error("Slip upload error: " + (err.response?.data?.message || err.message));
           setIsSaving(false);
           return;
         }
