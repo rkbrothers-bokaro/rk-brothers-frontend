@@ -399,7 +399,9 @@
         "10": "October",
         "11": "November",
         "12": "December"
-      }
+      },
+      "registerTab": "Monthly Register",
+      "receiptsTab": "Receipts History"
     },
     "billing": {
       "title": "Generate Bill",
