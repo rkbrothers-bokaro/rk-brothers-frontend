@@ -239,7 +239,7 @@ export default function DailyLogPage() {
     { key: "totalHrs", header: t("fleet.dailyLog.columns.totalHrs"), render: (row) => row.noWorkDone ? <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">No Work</span> : (row.totalHrs ?? "—") },
     { key: "totalKm", header: t("fleet.dailyLog.columns.totalKm"), render: (row) => row.totalKm ?? "—" },
     { key: "diesel", header: t("fleet.dailyLog.columns.diesel"), render: (row) => row.dieselLtr ?? "—" },
-    { key: "trips", header: t("fleet.dailyLog.columns.trips"), render: (row) => row.totalTrips ?? "—" },
+    { key: "trips", header: t("fleet.dailyLog.columns.trips"), render: (row) => row.tripCount ?? row.totalTrips ?? "—" },
   ];
 
   const vehicleOptions = activeVehicles.map((v) => ({ value: v.id, label: v.displayName || v.vehicleNo }));

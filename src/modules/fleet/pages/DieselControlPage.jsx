@@ -189,7 +189,7 @@ export default function DieselControlPage() {
       header: t("fleet.diesel.columns.equipment"),
       render: (row) => row.equipmentNo || row.vehicleDisplayName || vehicleLabel(row.vehicleId),
     },
-    { key: "openingBal", header: t("fleet.diesel.columns.openingBal"), render: (row) => row.openingBal ?? "—" },
+    { key: "openingBal", header: t("fleet.diesel.columns.openingBal"), render: (row) => row.openingBalance ?? row.openingBal ?? "—" },
     {
       key: "received",
       header: t("fleet.diesel.columns.received"),
@@ -201,7 +201,7 @@ export default function DieselControlPage() {
       header: t("fleet.diesel.columns.hsdIssue"),
       render: (row) => (Number(row.hsdIssue) > 0 ? <span className="text-red-600">-{row.hsdIssue}</span> : "—"),
     },
-    { key: "closingBal", header: t("fleet.diesel.columns.closingBal"), render: (row) => row.closingBal ?? "—" },
+    { key: "closingBal", header: t("fleet.diesel.columns.closingBal"), render: (row) => row.closingBalance ?? row.closingBal ?? "—" },
     {
       key: "progressive",
       header: t("fleet.diesel.columns.progressive"),
@@ -210,12 +210,15 @@ export default function DieselControlPage() {
     {
       key: "km",
       header: t("fleet.diesel.columns.km"),
-      render: (row) => (isTipperRow(row) ? (row.km ?? "—") : "—"),
+      render: (row) => (isTipperRow(row) ? (row.totalKm ?? row.km ?? "—") : "—"),
     },
     {
       key: "avg",
       header: t("fleet.diesel.columns.avg"),
-      render: (row) => <span className={avgColorClass(row)}>{row.avg ?? "—"}</span>,
+      render: (row) => {
+        const val = isTipperRow(row) ? (row.avgKmPerLtr ?? row.avg) : (row.avgLtrPerHr ?? row.avg);
+        return <span className={avgColorClass(row)}>{val !== null && val !== undefined ? val : "—"}</span>;
+      },
     },
   ];
 

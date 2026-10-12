@@ -55,18 +55,27 @@ function buildInitialFormState(initialData) {
     vehicleId: initialData.vehicleId || "",
     workOrderId: initialData.workOrderId || "",
     driverId: initialData.driverId || initialData.operatorId || "",
+    noWorkDone: Boolean(initialData.noWorkDone),
     meterRows:
-      Array.isArray(initialData.meterRows) && initialData.meterRows.length > 0
+      Array.isArray(initialData.hrEntries) && initialData.hrEntries.length > 0
+        ? initialData.hrEntries.map((r) => ({ openingHrs: r.openingHrs ?? "", closingHrs: r.closingHrs ?? "" }))
+        : Array.isArray(initialData.meterRows) && initialData.meterRows.length > 0
         ? initialData.meterRows.map((r) => ({ openingHrs: r.openingHrs ?? "", closingHrs: r.closingHrs ?? "" }))
-        : [{ openingHrs: "", closingHrs: "" }],
+        : [{ openingHrs: initialData.openingHrs ?? "", closingHrs: initialData.closingHrs ?? "" }],
     openingKm: initialData.openingKm ?? "",
     closingKm: initialData.closingKm ?? "",
-    dieselLtr: initialData.dieselLtr ?? "",
+    dieselLtr: initialData.dieselLtr ?? initialData.dieselFilled ?? "",
     dieselHrs: initialData.dieselHrs ?? "",
     dieselKm: initialData.dieselKm ?? "",
     runKm: initialData.runKm ?? "",
     trips:
-      Array.isArray(initialData.trips) && initialData.trips.length > 0
+      Array.isArray(initialData.tripEntries) && initialData.tripEntries.length > 0
+        ? initialData.tripEntries.map((r) => ({
+            fromLocation: r.fromLocation || "",
+            toLocation: r.toLocation || "",
+            tripCount: r.tripCount ?? r.trips ?? "",
+          }))
+        : Array.isArray(initialData.trips) && initialData.trips.length > 0
         ? initialData.trips.map((r) => ({
             fromLocation: r.fromLocation || "",
             toLocation: r.toLocation || "",
