@@ -25,6 +25,7 @@ function buildInitialFormState(initialData) {
       vehicleId: "",
       workOrderId: "",
       operatorId: "",
+      noWorkDone: false,
       openingHrs: "",
       closingHrs: "",
       shifts: [{ startTime: "", closeTime: "" }],
@@ -36,6 +37,7 @@ function buildInitialFormState(initialData) {
       unit: "",
       workDescription: "",
       receivingSlip: null,
+      receivingSlipUrl: "",
     };
   }
   return {
@@ -181,8 +183,11 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
     const nextErrors = {};
     if (!formData.date) nextErrors.date = t("common.required");
     if (!formData.vehicleId) nextErrors.vehicleId = t("common.required");
-    if (!formData.workOrderId) nextErrors.workOrderId = t("common.required");
-    if (!formData.operatorId) nextErrors.operatorId = t("common.required");
+    if (formData.noWorkDone) {
+      if (!formData.workDescription?.trim()) {
+        nextErrors.workDescription = t("fleet.dailyLog.form.reasonRequired") || "Reason why no work done is required";
+      }
+    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -200,22 +205,24 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
         }
       }
 
+      const isNoWork = Boolean(formData.noWorkDone);
       const payload = {
         date: formData.date,
         vehicleId: formData.vehicleId,
-        workOrderId: formData.workOrderId,
-        operatorId: formData.operatorId,
-        openingHrs: formData.openingHrs === "" ? null : Number(formData.openingHrs),
-        closingHrs: formData.closingHrs === "" ? null : Number(formData.closingHrs),
-        shifts: formData.shifts.filter((row) => row.startTime || row.closeTime),
-        dieselFilled: formData.dieselFilled === "" ? null : Number(formData.dieselFilled),
-        dieselMeter: formData.dieselMeter === "" ? null : Number(formData.dieselMeter),
-        running: formData.running === "" ? null : Number(formData.running),
-        materialType: formData.materialType || null,
-        quantity: formData.quantity === "" ? null : Number(formData.quantity),
-        unit: formData.unit || null,
-        workDescription: formData.workDescription,
-        receivingSlipUrl: slipUrl || null,
+        workOrderId: formData.workOrderId || null,
+        operatorId: formData.operatorId || null,
+        noWorkDone: isNoWork,
+        openingHrs: isNoWork || formData.openingHrs === "" ? null : Number(formData.openingHrs),
+        closingHrs: isNoWork || formData.closingHrs === "" ? null : Number(formData.closingHrs),
+        shifts: isNoWork ? [] : formData.shifts.filter((row) => row.startTime || row.closeTime),
+        dieselLtr: isNoWork || formData.dieselFilled === "" ? null : Number(formData.dieselFilled),
+        dieselMtr: isNoWork || formData.dieselMeter === "" ? null : Number(formData.dieselMeter),
+        runningLtr: isNoWork || formData.running === "" ? null : Number(formData.running),
+        materialType: isNoWork ? null : (formData.materialType || null),
+        materialQty: isNoWork || formData.quantity === "" ? null : Number(formData.quantity),
+        materialUnit: isNoWork ? null : (formData.unit || null),
+        workDescription: formData.workDescription || "",
+        receivingSlipUrl: isNoWork ? null : (slipUrl || null),
       };
 
       if (isEdit && initialData) {
@@ -276,11 +283,27 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
               error={errors.operatorId}
               disabled={isSaving || isReadOnly}
             />
+            <div className="sm:col-span-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={formData.noWorkDone}
+                  onChange={(e) => updateField("noWorkDone", e.target.checked)}
+                  disabled={isSaving || isReadOnly}
+                  className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500 disabled:cursor-not-allowed"
+                />
+                <span className="text-sm font-semibold text-amber-900">
+                  {t("fleet.dailyLog.form.noWorkDone") || "No Work Done (काम नहीं हुआ)"}
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <SectionTitle>{t("fleet.dailyLog.form.meterHours")}</SectionTitle>
+        {!formData.noWorkDone && (
+          <>
+            <div className="flex flex-col gap-4">
+              <SectionTitle>{t("fleet.dailyLog.form.meterHours")}</SectionTitle>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1">
               <Input
@@ -374,35 +397,53 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
             })}
           </div>
         </div>
+          </>
+        )}
 
         <div className="flex flex-col gap-4">
-          <SectionTitle>{t("fleet.dailyLog.form.workDetails")}</SectionTitle>
+          <SectionTitle>
+            {formData.noWorkDone
+              ? (t("fleet.dailyLog.form.reasonTitle") || "Reason / Description")
+              : t("fleet.dailyLog.form.workDetails")}
+          </SectionTitle>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.workDescription")}</label>
+            <label className="text-sm font-medium text-zinc-700">
+              {formData.noWorkDone
+                ? `${t("fleet.dailyLog.form.workDescription") || "Work Description"} (Write reason why no work done) *`
+                : t("fleet.dailyLog.form.workDescription")}
+            </label>
             <textarea
               rows={3}
               value={formData.workDescription}
+              placeholder={formData.noWorkDone ? "Write reason why no work was done (e.g. Breakdown, Operator absent, Site holiday, Maintenance)..." : ""}
               onChange={(e) => updateField("workDescription", e.target.value)}
               disabled={isSaving || isReadOnly}
-              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
+              className={`w-full rounded-md border px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 ${
+                errors.workDescription ? "border-red-500" : "border-zinc-300"
+              }`}
             />
+            {errors.workDescription && <p className="text-xs text-red-600">{errors.workDescription}</p>}
           </div>
-          {isReadOnly ? (
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.receivingSlip")}</span>
-              <p className="text-sm text-zinc-500">{formData.receivingSlipUrl || "—"}</p>
-            </div>
-          ) : (
-            <FileUpload
-              label={t("fleet.dailyLog.form.receivingSlip")}
-              accept="image/*,application/pdf"
-              onChange={(file) => updateField("receivingSlip", file)}
-            />
+          {!formData.noWorkDone && (
+            isReadOnly ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.receivingSlip")}</span>
+                <p className="text-sm text-zinc-500">{formData.receivingSlipUrl || "—"}</p>
+              </div>
+            ) : (
+              <FileUpload
+                label={t("fleet.dailyLog.form.receivingSlip")}
+                accept="image/*,application/pdf"
+                onChange={(file) => updateField("receivingSlip", file)}
+              />
+            )
           )}
         </div>
 
-        <div className="flex flex-col gap-4">
-          <SectionTitle>{t("fleet.dailyLog.form.diesel")}</SectionTitle>
+        {!formData.noWorkDone && (
+          <>
+            <div className="flex flex-col gap-4">
+              <SectionTitle>{t("fleet.dailyLog.form.diesel")}</SectionTitle>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Input
               label={t("fleet.dailyLog.form.dieselFilled")}
@@ -464,6 +505,8 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
             />
           </div>
         </div>
+          </>
+        )}
 
         <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">
           <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>

@@ -36,6 +36,7 @@ function buildInitialFormState(initialData) {
       vehicleId: "",
       workOrderId: "",
       driverId: "",
+      noWorkDone: false,
       meterRows: [{ openingHrs: "", closingHrs: "" }],
       openingKm: "",
       closingKm: "",
@@ -46,6 +47,7 @@ function buildInitialFormState(initialData) {
       trips: [{ fromLocation: "", toLocation: "", tripCount: "" }],
       workDescription: "",
       receivingSlip: null,
+      receivingSlipUrl: "",
     };
   }
   return {
@@ -189,8 +191,11 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
     const nextErrors = {};
     if (!formData.date) nextErrors.date = t("common.required");
     if (!formData.vehicleId) nextErrors.vehicleId = t("common.required");
-    if (!formData.workOrderId) nextErrors.workOrderId = t("common.required");
-    if (!formData.driverId) nextErrors.driverId = t("common.required");
+    if (formData.noWorkDone) {
+      if (!formData.workDescription?.trim()) {
+        nextErrors.workDescription = t("fleet.dailyLog.form.reasonRequired") || "Reason why no work done is required";
+      }
+    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -208,32 +213,44 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
         }
       }
 
+      const isNoWork = Boolean(formData.noWorkDone);
+      const validMeterRows = formData.meterRows.filter((row) => row.openingHrs !== "" || row.closingHrs !== "");
+      const firstOpen = validMeterRows.length > 0 ? numOrNull(validMeterRows[0].openingHrs) : null;
+      const lastClose = validMeterRows.length > 0 ? numOrNull(validMeterRows[validMeterRows.length - 1].closingHrs) : null;
+
+      const validTrips = formData.trips.filter((row) => row.fromLocation || row.toLocation || row.tripCount !== "");
+      const totalTripCount = validTrips.reduce((acc, row) => acc + (row.tripCount === "" ? 1 : Number(row.tripCount)), 0);
+
       const payload = {
         date: formData.date,
         vehicleId: formData.vehicleId,
-        workOrderId: formData.workOrderId,
-        driverId: formData.driverId,
-        meterRows: formData.meterRows
-          .filter((row) => row.openingHrs !== "" || row.closingHrs !== "")
-          .map((row) => ({
-            openingHrs: row.openingHrs === "" ? null : Number(row.openingHrs),
-            closingHrs: row.closingHrs === "" ? null : Number(row.closingHrs),
-          })),
-        openingKm: numOrNull(formData.openingKm),
-        closingKm: numOrNull(formData.closingKm),
-        dieselLtr: numOrNull(formData.dieselLtr),
-        dieselHrs: numOrNull(formData.dieselHrs),
-        dieselKm: numOrNull(formData.dieselKm),
-        runKm: numOrNull(formData.runKm),
-        trips: formData.trips
-          .filter((row) => row.fromLocation || row.toLocation || row.tripCount !== "")
-          .map((row) => ({
-            fromLocation: row.fromLocation,
-            toLocation: row.toLocation,
-            tripCount: row.tripCount === "" ? null : Number(row.tripCount),
-          })),
-        workDescription: formData.workDescription,
-        receivingSlipUrl: slipUrl || null,
+        workOrderId: formData.workOrderId || null,
+        driverId: formData.driverId || null,
+        noWorkDone: isNoWork,
+        openingHrs: isNoWork ? null : firstOpen,
+        closingHrs: isNoWork ? null : lastClose,
+        hrEntries: isNoWork
+          ? []
+          : validMeterRows.map((row) => ({
+              openingHrs: row.openingHrs === "" ? null : Number(row.openingHrs),
+              closingHrs: row.closingHrs === "" ? null : Number(row.closingHrs),
+            })),
+        openingKm: isNoWork ? null : numOrNull(formData.openingKm),
+        closingKm: isNoWork ? null : numOrNull(formData.closingKm),
+        dieselLtr: isNoWork ? null : numOrNull(formData.dieselLtr),
+        dieselHrs: isNoWork ? null : numOrNull(formData.dieselHrs),
+        dieselKm: isNoWork ? null : numOrNull(formData.dieselKm),
+        runKm: isNoWork ? null : numOrNull(formData.runKm),
+        tripCount: isNoWork ? 0 : totalTripCount,
+        tripEntries: isNoWork
+          ? []
+          : validTrips.map((row) => ({
+              fromLocation: row.fromLocation,
+              toLocation: row.toLocation,
+              trips: row.tripCount === "" ? 1 : Number(row.tripCount),
+            })),
+        workDescription: formData.workDescription || "",
+        receivingSlipUrl: isNoWork ? null : (slipUrl || null),
       };
 
       if (isEdit && initialData) {
@@ -294,12 +311,28 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
               error={errors.driverId}
               disabled={isSaving || isReadOnly}
             />
+            <div className="sm:col-span-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={formData.noWorkDone}
+                  onChange={(e) => updateField("noWorkDone", e.target.checked)}
+                  disabled={isSaving || isReadOnly}
+                  className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500 disabled:cursor-not-allowed"
+                />
+                <span className="text-sm font-semibold text-amber-900">
+                  {t("fleet.dailyLog.form.noWorkDone") || "No Work Done (काम नहीं हुआ)"}
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <SectionTitle>{t("fleet.dailyLog.form.meterHours")}</SectionTitle>
+        {!formData.noWorkDone && (
+          <>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <SectionTitle>{t("fleet.dailyLog.form.meterHours")}</SectionTitle>
             {!isReadOnly && (
               <Button type="button" variant="secondary" size="sm" onClick={addMeterRow} disabled={isSaving}>
                 <Plus className="h-4 w-4" />
@@ -445,35 +478,53 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
             </div>
           </div>
         </div>
+          </>
+        )}
 
         <div className="flex flex-col gap-4">
-          <SectionTitle>{t("fleet.dailyLog.form.workDetails")}</SectionTitle>
+          <SectionTitle>
+            {formData.noWorkDone
+              ? (t("fleet.dailyLog.form.reasonTitle") || "Reason / Description")
+              : t("fleet.dailyLog.form.workDetails")}
+          </SectionTitle>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.workDescription")}</label>
+            <label className="text-sm font-medium text-zinc-700">
+              {formData.noWorkDone
+                ? `${t("fleet.dailyLog.form.workDescription") || "Work Description"} (Write reason why no work done) *`
+                : t("fleet.dailyLog.form.workDescription")}
+            </label>
             <textarea
               rows={3}
               value={formData.workDescription}
+              placeholder={formData.noWorkDone ? "Write reason why no work was done (e.g. Breakdown, Driver absent, Site holiday, Maintenance)..." : ""}
               onChange={(e) => updateField("workDescription", e.target.value)}
               disabled={isSaving || isReadOnly}
-              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
+              className={`w-full rounded-md border px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 ${
+                errors.workDescription ? "border-red-500" : "border-zinc-300"
+              }`}
             />
+            {errors.workDescription && <p className="text-xs text-red-600">{errors.workDescription}</p>}
           </div>
-          {isReadOnly ? (
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.receivingSlip")}</span>
-              <p className="text-sm text-zinc-500">{formData.receivingSlipUrl || "—"}</p>
-            </div>
-          ) : (
-            <FileUpload
-              label={t("fleet.dailyLog.form.receivingSlip")}
-              accept="image/*,application/pdf"
-              onChange={(file) => updateField("receivingSlip", file)}
-            />
+          {!formData.noWorkDone && (
+            isReadOnly ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.receivingSlip")}</span>
+                <p className="text-sm text-zinc-500">{formData.receivingSlipUrl || "—"}</p>
+              </div>
+            ) : (
+              <FileUpload
+                label={t("fleet.dailyLog.form.receivingSlip")}
+                accept="image/*,application/pdf"
+                onChange={(file) => updateField("receivingSlip", file)}
+              />
+            )
           )}
         </div>
 
-        <div className="flex flex-col gap-4">
-          <SectionTitle>{t("fleet.dailyLog.form.diesel")}</SectionTitle>
+        {!formData.noWorkDone && (
+          <>
+            <div className="flex flex-col gap-4">
+              <SectionTitle>{t("fleet.dailyLog.form.diesel")}</SectionTitle>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <Input
               label={t("fleet.dailyLog.form.dieselLtr")}
@@ -513,6 +564,8 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
             <div className="text-lg font-semibold text-zinc-800">{avgKmLtr !== null ? avgKmLtr.toFixed(2) : "—"}</div>
           </div>
         </div>
+          </>
+        )}
 
         <div className="flex justify-end gap-3 border-t border-zinc-200 pt-4">
           <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
