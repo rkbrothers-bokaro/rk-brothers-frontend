@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const Select = forwardRef(function Select(
-  { label, options = [], error, disabled = false, placeholder, placeholderSelectable = false, className = "", id, ...rest },
+  { label, options = [], error, disabled = false, required = false, placeholder, placeholderSelectable = false, className = "", id, ...rest },
   ref,
 ) {
   const { t } = useTranslation();
@@ -15,6 +15,7 @@ const Select = forwardRef(function Select(
       {label && (
         <label htmlFor={selectId} className="text-sm font-medium text-zinc-700">
           {label}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </label>
       )}
       <div className="relative">

@@ -301,6 +301,7 @@ export default function VehiclesPage() {
               onChange={(e) => setFormData((f) => ({ ...f, vehicleNo: e.target.value }))}
               error={formErrors.vehicleNo}
               disabled={isSaving}
+              required
             />
             <Input
               label={t("masters.vehicles.form.displayName")}
@@ -316,6 +317,7 @@ export default function VehiclesPage() {
               onChange={(e) => setFormData((f) => ({ ...f, type: e.target.value }))}
               error={formErrors.type}
               disabled={isSaving}
+              required
             />
             <Select
               label={t("masters.vehicles.form.billingBasis")}
@@ -324,6 +326,7 @@ export default function VehiclesPage() {
               onChange={(e) => setFormData((f) => ({ ...f, billingBasis: e.target.value }))}
               error={formErrors.billingBasis}
               disabled={isSaving}
+              required
             />
             <Select
               label={t("masters.vehicles.form.assignedOperator")}

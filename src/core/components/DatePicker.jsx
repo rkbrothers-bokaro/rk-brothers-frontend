@@ -2,7 +2,7 @@ import { forwardRef, useId } from "react";
 import { useTranslation } from "react-i18next";
 
 const DatePicker = forwardRef(function DatePicker(
-  { label, error, disabled = false, className = "", id, value, ...rest },
+  { label, error, disabled = false, required = false, className = "", id, value, ...rest },
   ref,
 ) {
   const { i18n } = useTranslation();
@@ -22,6 +22,7 @@ const DatePicker = forwardRef(function DatePicker(
       {label && (
         <label htmlFor={inputId} className="text-sm font-medium text-zinc-700">
           {label}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </label>
       )}
       <input

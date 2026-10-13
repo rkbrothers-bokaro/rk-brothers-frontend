@@ -274,6 +274,7 @@
         "avg": "औसत (लीटर/घंटा)",
         "totalKm": "कुल किमी",
         "trips": "ट्रिप",
+        "partyName": "पार्टी का नाम",
         "actions": "कार्रवाई"
       },
       "form": {
@@ -288,6 +289,10 @@
         "reasonTitle": "काम न होने का कारण",
         "reasonWhyNoWork": "कार्य विवरण (काम न होने का कारण लिखें)",
         "reasonRequired": "काम न होने का कारण आवश्यक है",
+        "partyDetails": "पार्टी विवरण",
+        "partyName": "पार्टी का नाम (Party Name)",
+        "partyNamePlaceholder": "पार्टी का नाम दर्ज करें (वैकल्पिक)",
+        "searchVehicle": "वाहन खोजें (Search vehicle)...",
         "date": "तारीख",
         "vehicle": "वाहन",
         "operator": "ऑपरेटर",

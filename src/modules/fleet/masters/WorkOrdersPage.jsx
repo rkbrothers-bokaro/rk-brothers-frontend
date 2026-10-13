@@ -288,6 +288,7 @@ export default function WorkOrdersPage() {
                 onChange={(e) => setFormData((f) => ({ ...f, woNumber: e.target.value }))}
                 error={formErrors.woNumber}
                 disabled={isSaving}
+                required
               />
               <Input
                 label={t("masters.workOrders.form.party")}
@@ -296,6 +297,7 @@ export default function WorkOrdersPage() {
                 onChange={(e) => setFormData((f) => ({ ...f, partyName: e.target.value }))}
                 error={formErrors.partyName}
                 disabled={isSaving}
+                required
               />
             </div>
 
@@ -322,6 +324,7 @@ export default function WorkOrdersPage() {
                 onChange={(e) => setFormData((f) => ({ ...f, billingBasis: e.target.value }))}
                 error={formErrors.billingBasis}
                 disabled={isSaving}
+                required
               />
 
               <div className="flex flex-col gap-1">

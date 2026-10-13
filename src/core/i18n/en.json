@@ -274,6 +274,7 @@
         "avg": "Avg (L/hr)",
         "totalKm": "Total KM",
         "trips": "Trips",
+        "partyName": "Party Name",
         "actions": "Actions"
       },
       "form": {
@@ -288,6 +289,10 @@
         "reasonTitle": "Reason for No Work",
         "reasonWhyNoWork": "Work Description (Reason why no work done)",
         "reasonRequired": "Reason why no work done is required",
+        "partyDetails": "Party Details",
+        "partyName": "Party Name",
+        "partyNamePlaceholder": "Enter party name (optional)",
+        "searchVehicle": "Search vehicle...",
         "date": "Date",
         "vehicle": "Vehicle",
         "operator": "Operator",

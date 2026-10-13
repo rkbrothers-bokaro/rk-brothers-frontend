@@ -1,7 +1,7 @@
 import { forwardRef, useId } from "react";
 
 const Input = forwardRef(function Input(
-  { label, error, disabled = false, className = "", id, ...rest },
+  { label, error, disabled = false, required = false, className = "", id, ...rest },
   ref,
 ) {
   const generatedId = useId();
@@ -12,6 +12,7 @@ const Input = forwardRef(function Input(
       {label && (
         <label htmlFor={inputId} className="text-sm font-medium text-zinc-700">
           {label}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </label>
       )}
       <input

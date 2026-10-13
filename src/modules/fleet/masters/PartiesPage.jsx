@@ -211,6 +211,7 @@ export default function PartiesPage() {
               onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
               error={formErrors.name}
               disabled={isSaving}
+              required
             />
             <Input
               label={t("masters.parties.form.contactPerson")}

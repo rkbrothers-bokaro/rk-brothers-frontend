@@ -256,6 +256,7 @@ export default function OperatorsPage() {
               onChange={(e) => setFormData((f) => ({ ...f, name: e.target.value }))}
               error={formErrors.name}
               disabled={isSaving}
+              required
             />
             <Input
               label={t("masters.operators.form.phone")}
@@ -265,6 +266,7 @@ export default function OperatorsPage() {
               onChange={(e) => setFormData((f) => ({ ...f, phone: e.target.value }))}
               error={formErrors.phone}
               disabled={isSaving}
+              required
             />
             <Input
               label={t("masters.operators.form.licenceNo")}

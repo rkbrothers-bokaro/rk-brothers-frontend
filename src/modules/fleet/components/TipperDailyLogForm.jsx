@@ -8,6 +8,7 @@ import Select from "../../../core/components/Select";
 import DatePicker from "../../../core/components/DatePicker";
 import FileUpload from "../../../core/components/FileUpload";
 import Button from "../../../core/components/Button";
+import SearchableSelect from "../../../core/components/SearchableSelect";
 import { getTipperOpeningHrs, createTipperLog, updateTipperLog, uploadSlip } from "../api/dailyLogApi";
 
 function todayStr() {
@@ -44,6 +45,7 @@ function buildInitialFormState(initialData) {
       dieselHrs: "",
       dieselKm: "",
       runKm: "",
+      partyName: "",
       trips: [{ fromLocation: "", toLocation: "", tripCount: "" }],
       workDescription: "",
       receivingSlip: null,
@@ -82,6 +84,7 @@ function buildInitialFormState(initialData) {
             tripCount: r.tripCount ?? r.trips ?? "",
           }))
         : [{ fromLocation: "", toLocation: "", tripCount: "" }],
+    partyName: initialData.partyName || "",
     workDescription: initialData.workDescription || "",
     receivingSlipUrl: initialData.receivingSlipUrl || initialData.receivingSlip || "",
     receivingSlip: null,
@@ -106,7 +109,12 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
   const skipNextOpeningFetch = useRef(mode !== "create");
 
   const vehicleOptions = useMemo(
-    () => vehicles.map((v) => ({ value: v.id, label: v.displayName || v.vehicleNo })),
+    () =>
+      vehicles.map((v) => ({
+        value: v.id,
+        label: v.displayName ? `${v.displayName} (${v.vehicleNo})` : v.vehicleNo,
+        sublabel: v.type ? `Type: ${v.type}` : "",
+      })),
     [vehicles],
   );
   const workOrderOptions = useMemo(() => workOrders.map((w) => ({ value: w.id, label: w.woNumber })), [workOrders]);
@@ -258,6 +266,7 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
               toLocation: row.toLocation,
               trips: row.tripCount === "" ? 1 : Number(row.tripCount),
             })),
+        partyName: formData.partyName?.trim() || null,
         workDescription: formData.workDescription || "",
         receivingSlipUrl: isNoWork ? null : (slipUrl || null),
       };
@@ -295,14 +304,18 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
               onChange={(e) => updateField("date", e.target.value)}
               error={errors.date}
               disabled={isSaving || isReadOnly}
+              required
             />
-            <Select
+            <SearchableSelect
               label={t("fleet.dailyLog.form.vehicle")}
               options={vehicleOptions}
               value={formData.vehicleId}
               onChange={(e) => updateField("vehicleId", e.target.value)}
               error={errors.vehicleId}
               disabled={isSaving || isReadOnly}
+              required
+              placeholder={t("fleet.dailyLog.form.vehicle")}
+              searchPlaceholder={t("fleet.dailyLog.form.searchVehicle")}
             />
             <Select
               label={t("fleet.dailyLog.form.workOrder")}
@@ -571,6 +584,19 @@ export default function TipperDailyLogForm({ mode, initialData, vehicles, workOr
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.avgKmLtr")}</span>
             <div className="text-lg font-semibold text-zinc-800">{avgKmLtr !== null ? avgKmLtr.toFixed(2) : "—"}</div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <SectionTitle>{t("fleet.dailyLog.form.partyDetails")}</SectionTitle>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label={t("fleet.dailyLog.form.partyName")}
+              placeholder={t("fleet.dailyLog.form.partyNamePlaceholder")}
+              value={formData.partyName}
+              onChange={(e) => updateField("partyName", e.target.value)}
+              disabled={isSaving || isReadOnly}
+            />
           </div>
         </div>
           </>

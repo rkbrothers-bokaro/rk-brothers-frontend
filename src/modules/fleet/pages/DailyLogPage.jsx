@@ -222,6 +222,7 @@ export default function DailyLogPage() {
     { key: "vehicle", header: t("fleet.dailyLog.columns.vehicle"), render: vehicleLabel },
     { key: "operator", header: t("fleet.dailyLog.columns.operator"), render: operatorLabel },
     { key: "workOrder", header: t("fleet.dailyLog.columns.workOrder"), render: workOrderLabel },
+    { key: "partyName", header: t("fleet.dailyLog.columns.partyName") || "Party Name", render: (row) => row.partyName || "—" },
     { key: "openingHrs", header: t("fleet.dailyLog.columns.openingHrs"), render: (row) => row.openingHrs ?? "—" },
     { key: "closingHrs", header: t("fleet.dailyLog.columns.closingHrs"), render: (row) => row.closingHrs ?? "—" },
     { key: "totalHrs", header: t("fleet.dailyLog.columns.totalHrs"), render: (row) => row.noWorkDone ? <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">No Work</span> : (row.totalHrs ?? "—") },
@@ -236,15 +237,19 @@ export default function DailyLogPage() {
     { key: "vehicle", header: t("fleet.dailyLog.columns.vehicle"), render: vehicleLabel },
     { key: "driver", header: t("fleet.dailyLog.columns.driver"), render: operatorLabel },
     { key: "workOrder", header: t("fleet.dailyLog.columns.workOrder"), render: workOrderLabel },
+    { key: "partyName", header: t("fleet.dailyLog.columns.partyName") || "Party Name", render: (row) => row.partyName || "—" },
     { key: "totalHrs", header: t("fleet.dailyLog.columns.totalHrs"), render: (row) => row.noWorkDone ? <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">No Work</span> : (row.totalHrs ?? "—") },
     { key: "totalKm", header: t("fleet.dailyLog.columns.totalKm"), render: (row) => row.totalKm ?? "—" },
     { key: "diesel", header: t("fleet.dailyLog.columns.diesel"), render: (row) => row.dieselLtr ?? "—" },
     { key: "trips", header: t("fleet.dailyLog.columns.trips"), render: (row) => row.tripCount ?? row.totalTrips ?? "—" },
   ];
 
-  const vehicleOptions = activeVehicles.map((v) => ({ value: v.id, label: v.displayName || v.vehicleNo }));
+  const vehicleOptions = vehicles.map((v) => ({
+    value: v.id,
+    label: v.displayName ? `${v.displayName} (${v.vehicleNo})` : v.vehicleNo,
+  }));
   const workOrderOptions = workOrders.map((w) => ({ value: w.id, label: w.woNumber }));
-  const operatorOptions = activeOperators.map((op) => ({ value: op.id, label: op.name }));
+  const operatorOptions = operators.map((op) => ({ value: op.id, label: op.name }));
 
   return (
     <div>
@@ -348,9 +353,9 @@ export default function DailyLogPage() {
         <JcbDailyLogForm
           mode={modalMode}
           initialData={activeEntry}
-          vehicles={jcbVehicles}
+          vehicles={vehicles}
           workOrders={workOrders}
-          operators={jcbOperators}
+          operators={operators}
           onClose={closeModal}
           onSaved={handleSaved}
         />
@@ -360,9 +365,9 @@ export default function DailyLogPage() {
         <TipperDailyLogForm
           mode={modalMode}
           initialData={activeEntry}
-          vehicles={tipperVehicles}
+          vehicles={vehicles}
           workOrders={workOrders}
-          operators={tipperDrivers}
+          operators={operators}
           onClose={closeModal}
           onSaved={handleSaved}
         />
