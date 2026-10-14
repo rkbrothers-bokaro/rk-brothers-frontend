@@ -225,7 +225,22 @@ export default function DailyLogPage() {
     { key: "partyName", header: t("fleet.dailyLog.columns.partyName") || "Party Name", render: (row) => row.partyName || "—" },
     { key: "openingHrs", header: t("fleet.dailyLog.columns.openingHrs"), render: (row) => row.openingHrs ?? "—" },
     { key: "closingHrs", header: t("fleet.dailyLog.columns.closingHrs"), render: (row) => row.closingHrs ?? "—" },
-    { key: "totalHrs", header: t("fleet.dailyLog.columns.totalHrs"), render: (row) => row.noWorkDone ? <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">No Work</span> : (row.totalHrs ?? "—") },
+    {
+      key: "totalHrs",
+      header: t("fleet.dailyLog.columns.totalHrs"),
+      render: (row) =>
+        row.driverAbsent ? (
+          <span className="inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 border border-red-200">
+            Driver Absent
+          </span>
+        ) : row.noWorkDone ? (
+          <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">
+            No Work
+          </span>
+        ) : (
+          row.totalHrs ?? "—"
+        ),
+    },
     { key: "diesel", header: t("fleet.dailyLog.columns.diesel"), render: (row) => row.dieselLtr ?? "—" },
     { key: "avg", header: t("fleet.dailyLog.columns.avg"), render: (row) => row.avgLtrPerHr ?? "—" },
   ];
@@ -238,7 +253,22 @@ export default function DailyLogPage() {
     { key: "driver", header: t("fleet.dailyLog.columns.driver"), render: operatorLabel },
     { key: "workOrder", header: t("fleet.dailyLog.columns.workOrder"), render: workOrderLabel },
     { key: "partyName", header: t("fleet.dailyLog.columns.partyName") || "Party Name", render: (row) => row.partyName || "—" },
-    { key: "totalHrs", header: t("fleet.dailyLog.columns.totalHrs"), render: (row) => row.noWorkDone ? <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">No Work</span> : (row.totalHrs ?? "—") },
+    {
+      key: "totalHrs",
+      header: t("fleet.dailyLog.columns.totalHrs"),
+      render: (row) =>
+        row.driverAbsent ? (
+          <span className="inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 border border-red-200">
+            Driver Absent
+          </span>
+        ) : row.noWorkDone ? (
+          <span className="inline-flex items-center rounded bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">
+            No Work
+          </span>
+        ) : (
+          row.totalHrs ?? "—"
+        ),
+    },
     { key: "totalKm", header: t("fleet.dailyLog.columns.totalKm"), render: (row) => row.totalKm ?? "—" },
     { key: "diesel", header: t("fleet.dailyLog.columns.diesel"), render: (row) => row.dieselLtr ?? "—" },
     { key: "trips", header: t("fleet.dailyLog.columns.trips"), render: (row) => row.tripCount ?? row.totalTrips ?? "—" },

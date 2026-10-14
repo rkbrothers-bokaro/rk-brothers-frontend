@@ -27,6 +27,7 @@ function buildInitialFormState(initialData) {
       workOrderId: "",
       operatorId: "",
       noWorkDone: false,
+      driverAbsent: false,
       openingHrs: "",
       closingHrs: "",
       shifts: [{ startTime: "", closeTime: "" }],
@@ -47,7 +48,8 @@ function buildInitialFormState(initialData) {
     vehicleId: initialData.vehicleId || "",
     workOrderId: initialData.workOrderId || "",
     operatorId: initialData.operatorId || "",
-    noWorkDone: Boolean(initialData.noWorkDone),
+    driverAbsent: Boolean(initialData.driverAbsent),
+    noWorkDone: Boolean(initialData.noWorkDone) && !Boolean(initialData.driverAbsent),
     openingHrs: initialData.openingHrs ?? "",
     closingHrs: initialData.closingHrs ?? "",
     shifts:
@@ -192,7 +194,7 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
     const nextErrors = {};
     if (!formData.date) nextErrors.date = t("common.required");
     if (!formData.vehicleId) nextErrors.vehicleId = t("common.required");
-    if (formData.noWorkDone) {
+    if (formData.noWorkDone && !formData.driverAbsent) {
       if (!formData.workDescription?.trim()) {
         nextErrors.workDescription = t("fleet.dailyLog.form.reasonRequired") || "Reason why no work done is required";
       }
@@ -214,12 +216,14 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
         }
       }
 
-      const isNoWork = Boolean(formData.noWorkDone);
+      const isAbsent = Boolean(formData.driverAbsent);
+      const isNoWork = isAbsent || Boolean(formData.noWorkDone);
       const payload = {
         date: formData.date,
         vehicleId: formData.vehicleId,
         workOrderId: formData.workOrderId || null,
         operatorId: formData.operatorId || null,
+        driverAbsent: isAbsent,
         noWorkDone: isNoWork,
         openingHrs: isNoWork || formData.openingHrs === "" ? null : Number(formData.openingHrs),
         closingHrs: isNoWork || formData.closingHrs === "" ? null : Number(formData.closingHrs),
@@ -230,8 +234,8 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
         materialType: isNoWork ? null : (formData.materialType || null),
         materialQty: isNoWork || formData.quantity === "" ? null : Number(formData.quantity),
         materialUnit: isNoWork ? null : (formData.unit || null),
-        partyName: formData.partyName?.trim() || null,
-        workDescription: formData.workDescription || "",
+        partyName: isNoWork ? null : (formData.partyName?.trim() || null),
+        workDescription: isAbsent ? "Driver Absent" : (formData.workDescription || ""),
         receivingSlipUrl: isNoWork ? null : (slipUrl || null),
       };
 
@@ -297,24 +301,55 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
               error={errors.operatorId}
               disabled={isSaving || isReadOnly}
             />
-            <div className="sm:col-span-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
-              <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={formData.noWorkDone}
-                  onChange={(e) => updateField("noWorkDone", e.target.checked)}
-                  disabled={isSaving || isReadOnly}
-                  className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500 disabled:cursor-not-allowed"
-                />
-                <span className="text-sm font-semibold text-amber-900">
-                  {t("fleet.dailyLog.form.noWorkDone") || "No Work Done (काम नहीं हुआ)"}
-                </span>
-              </label>
+            <div className="sm:col-span-2 flex flex-col gap-2">
+              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={formData.noWorkDone}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormData((f) => ({
+                        ...f,
+                        noWorkDone: checked,
+                        driverAbsent: checked ? false : f.driverAbsent,
+                      }));
+                    }}
+                    disabled={isSaving || isReadOnly}
+                    className="h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500 disabled:cursor-not-allowed"
+                  />
+                  <span className="text-sm font-semibold text-amber-900">
+                    {t("fleet.dailyLog.form.noWorkDone") || "No Work Done (काम नहीं हुआ)"}
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50/70 p-3">
+                <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={formData.driverAbsent}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setFormData((f) => ({
+                        ...f,
+                        driverAbsent: checked,
+                        noWorkDone: checked ? false : f.noWorkDone,
+                      }));
+                    }}
+                    disabled={isSaving || isReadOnly}
+                    className="h-4 w-4 rounded border-rose-400 text-rose-600 focus:ring-rose-500 disabled:cursor-not-allowed"
+                  />
+                  <span className="text-sm font-semibold text-rose-900">
+                    {t("fleet.dailyLog.form.driverAbsent") || "Driver Absent (ड्राइवर अनुपस्थित)"}
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
 
-        {!formData.noWorkDone && (
+        {!formData.noWorkDone && !formData.driverAbsent && (
           <>
             <div className="flex flex-col gap-4">
               <SectionTitle>{t("fleet.dailyLog.form.meterHours")}</SectionTitle>
@@ -414,47 +449,49 @@ export default function JcbDailyLogForm({ mode, initialData, vehicles, workOrder
           </>
         )}
 
-        <div className="flex flex-col gap-4">
-          <SectionTitle>
-            {formData.noWorkDone
-              ? (t("fleet.dailyLog.form.reasonTitle") || "Reason / Description")
-              : t("fleet.dailyLog.form.workDetails")}
-          </SectionTitle>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-700">
+        {!formData.driverAbsent && (
+          <div className="flex flex-col gap-4">
+            <SectionTitle>
               {formData.noWorkDone
-                ? `${t("fleet.dailyLog.form.workDescription") || "Work Description"} (Write reason why no work done) *`
-                : t("fleet.dailyLog.form.workDescription")}
-            </label>
-            <textarea
-              rows={3}
-              value={formData.workDescription}
-              placeholder={formData.noWorkDone ? "Write reason why no work was done (e.g. Breakdown, Operator absent, Site holiday, Maintenance)..." : ""}
-              onChange={(e) => updateField("workDescription", e.target.value)}
-              disabled={isSaving || isReadOnly}
-              className={`w-full rounded-md border px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 ${
-                errors.workDescription ? "border-red-500" : "border-zinc-300"
-              }`}
-            />
-            {errors.workDescription && <p className="text-xs text-red-600">{errors.workDescription}</p>}
-          </div>
-          {!formData.noWorkDone && (
-            isReadOnly ? (
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.receivingSlip")}</span>
-                <p className="text-sm text-zinc-500">{formData.receivingSlipUrl || "—"}</p>
-              </div>
-            ) : (
-              <FileUpload
-                label={t("fleet.dailyLog.form.receivingSlip")}
-                accept="image/*,application/pdf"
-                onChange={(file) => updateField("receivingSlip", file)}
+                ? (t("fleet.dailyLog.form.reasonTitle") || "Reason / Description")
+                : t("fleet.dailyLog.form.workDetails")}
+            </SectionTitle>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-zinc-700">
+                {formData.noWorkDone
+                  ? `${t("fleet.dailyLog.form.workDescription") || "Work Description"} (Write reason why no work done) *`
+                  : t("fleet.dailyLog.form.workDescription")}
+              </label>
+              <textarea
+                rows={3}
+                value={formData.workDescription}
+                placeholder={formData.noWorkDone ? "Write reason why no work was done (e.g. Breakdown, Operator absent, Site holiday, Maintenance)..." : ""}
+                onChange={(e) => updateField("workDescription", e.target.value)}
+                disabled={isSaving || isReadOnly}
+                className={`w-full rounded-md border px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400 ${
+                  errors.workDescription ? "border-red-500" : "border-zinc-300"
+                }`}
               />
-            )
-          )}
-        </div>
+              {errors.workDescription && <p className="text-xs text-red-600">{errors.workDescription}</p>}
+            </div>
+            {!formData.noWorkDone && (
+              isReadOnly ? (
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-zinc-700">{t("fleet.dailyLog.form.receivingSlip")}</span>
+                  <p className="text-sm text-zinc-500">{formData.receivingSlipUrl || "—"}</p>
+                </div>
+              ) : (
+                <FileUpload
+                  label={t("fleet.dailyLog.form.receivingSlip")}
+                  accept="image/*,application/pdf"
+                  onChange={(file) => updateField("receivingSlip", file)}
+                />
+              )
+            )}
+          </div>
+        )}
 
-        {!formData.noWorkDone && (
+        {!formData.noWorkDone && !formData.driverAbsent && (
           <>
             <div className="flex flex-col gap-4">
               <SectionTitle>{t("fleet.dailyLog.form.diesel")}</SectionTitle>

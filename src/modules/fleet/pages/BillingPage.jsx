@@ -3,9 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Download, MessageCircle } from "lucide-react";
 import PageHeader from "../../../core/components/PageHeader";
 import Select from "../../../core/components/Select";
+import SearchableSelect from "../../../core/components/SearchableSelect";
+import Input from "../../../core/components/Input";
 import Badge from "../../../core/components/Badge";
 import Button from "../../../core/components/Button";
-import { unwrapList } from "../masters/api";
+import { workOrdersApi, vehiclesApi, unwrapList } from "../masters/api";
 import { unwrapEnvelope } from "../../../core/api/unwrapEnvelope";
 import { getBillingPeriods, getBill, downloadBillPdf } from "../api/billingApi";
 import { numberToIndianWords } from "../utils/numberToWords";
@@ -26,6 +28,7 @@ const BILLING_BASIS_LABEL_KEYS = {
   trip: "masters.billingBasisOptions.trip",
   km: "masters.billingBasisOptions.km",
   rail_line: "masters.billingBasisOptions.railLine",
+  railline: "masters.billingBasisOptions.railLine",
 };
 
 const UNIT_LABEL_KEYS = {
@@ -33,6 +36,7 @@ const UNIT_LABEL_KEYS = {
   trip: "fleet.billing.units.trips",
   km: "fleet.billing.units.km",
   rail_line: "fleet.billing.units.railLine",
+  railline: "fleet.billing.units.railLine",
 };
 
 const RATE_SUFFIX_KEYS = {
@@ -40,13 +44,20 @@ const RATE_SUFFIX_KEYS = {
   trip: "fleet.billing.units.perTrip",
   km: "fleet.billing.units.perKm",
   rail_line: "fleet.billing.units.perRailLine",
+  railline: "fleet.billing.units.perRailLine",
 };
 
 export default function BillingPage() {
   const { t, i18n } = useTranslation();
 
   const [periods, setPeriods] = useState([]);
+  const [workOrders, setWorkOrders] = useState([]);
+  const [vehiclesList, setVehiclesList] = useState([]);
+
   const [selectedWorkOrderId, setSelectedWorkOrderId] = useState("");
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
+  const [partyName, setPartyName] = useState("");
+  const [siteLocation, setSiteLocation] = useState("");
   const [filters, setFilters] = useState({ month: CURRENT_MONTH, year: CURRENT_YEAR });
 
   const [bill, setBill] = useState(null);
@@ -57,20 +68,79 @@ export default function BillingPage() {
     getBillingPeriods()
       .then(({ data }) => setPeriods(unwrapList(data).items))
       .catch(() => setPeriods([]));
+
+    workOrdersApi
+      .listAll()
+      .then(({ data }) => setWorkOrders(unwrapList(data).items))
+      .catch(() => setWorkOrders([]));
+
+    vehiclesApi
+      .listAll()
+      .then(({ data }) => setVehiclesList(unwrapList(data).items))
+      .catch(() => setVehiclesList([]));
   }, []);
 
   useEffect(() => {
     setBill(null);
-  }, [selectedWorkOrderId, filters.month, filters.year]);
+  }, [selectedWorkOrderId, selectedVehicleId, filters.month, filters.year]);
 
-  const selectedWorkOrder = useMemo(
-    () => periods.find((p) => p.workOrderId === selectedWorkOrderId),
-    [periods, selectedWorkOrderId],
-  );
+  const selectedWorkOrder = useMemo(() => {
+    if (!selectedWorkOrderId) return null;
+    const fromMaster = workOrders.find((w) => String(w.id) === String(selectedWorkOrderId));
+    if (fromMaster) return fromMaster;
+    const fromPeriod = periods.find((p) => String(p.workOrderId) === String(selectedWorkOrderId));
+    return fromPeriod || null;
+  }, [workOrders, periods, selectedWorkOrderId]);
 
-  const workOrderOptions = useMemo(
-    () => periods.map((p) => ({ value: p.workOrderId, label: `${p.woNumber} — ${p.partyName}` })),
-    [periods],
+  function handleWorkOrderChange(woId) {
+    setSelectedWorkOrderId(woId);
+    if (!woId) {
+      setPartyName("");
+      setSiteLocation("");
+      return;
+    }
+    const wo =
+      workOrders.find((w) => String(w.id) === String(woId)) ||
+      periods.find((p) => String(p.workOrderId) === String(woId));
+    if (wo) {
+      setPartyName(wo.partyName || "");
+      setSiteLocation(wo.siteLocation || "");
+    } else {
+      setPartyName("");
+      setSiteLocation("");
+    }
+  }
+
+  const workOrderOptions = useMemo(() => {
+    const map = new Map();
+    workOrders.forEach((w) => {
+      map.set(String(w.id), {
+        value: String(w.id),
+        label: `${w.woNumber}${w.partyName ? ` — ${w.partyName}` : ""}`,
+      });
+    });
+    periods.forEach((p) => {
+      const key = String(p.workOrderId);
+      if (!map.has(key)) {
+        map.set(key, {
+          value: key,
+          label: `${p.woNumber}${p.partyName ? ` — ${p.partyName}` : ""}`,
+        });
+      }
+    });
+    return Array.from(map.values());
+  }, [workOrders, periods]);
+
+  const vehicleOptions = useMemo(
+    () => [
+      { value: "", label: t("fleet.billing.allVehicles") || "All Vehicles" },
+      ...vehiclesList.map((v) => ({
+        value: String(v.id),
+        label: v.displayName ? `${v.displayName} (${v.vehicleNo})` : v.vehicleNo,
+        sublabel: v.type ? `Type: ${v.type}` : "",
+      })),
+    ],
+    [vehiclesList, t],
   );
 
   const monthOptions = useMemo(
@@ -93,25 +163,25 @@ export default function BillingPage() {
   }
 
   function billingBasisLabel(basis) {
-    const key = BILLING_BASIS_LABEL_KEYS[basis];
+    const key = BILLING_BASIS_LABEL_KEYS[basis?.toLowerCase()];
     return key ? t(key) : basis || "—";
   }
 
   function unitLabel(basis) {
-    const key = UNIT_LABEL_KEYS[basis];
+    const key = UNIT_LABEL_KEYS[basis?.toLowerCase()];
     return key ? t(key) : basis || "";
   }
 
   function formatRate(basis, rate) {
     if (rate === undefined || rate === null) return "—";
-    const suffixKey = RATE_SUFFIX_KEYS[basis];
+    const suffixKey = RATE_SUFFIX_KEYS[basis?.toLowerCase()];
     const suffix = suffixKey ? t(suffixKey) : "";
     return `₹${Number(rate).toLocaleString("en-IN")}${suffix}`;
   }
 
   function qtyLabel(row) {
     const basis = row.unit || selectedWorkOrder?.billingBasis;
-    const qty = row.qty ?? row.quantity ?? 0;
+    const qty = row.quantity ?? row.qty ?? 0;
     return `${qty} ${unitLabel(basis)}`.trim();
   }
 
@@ -119,7 +189,14 @@ export default function BillingPage() {
     if (!selectedWorkOrderId) return;
     setIsGenerating(true);
     try {
-      const { data } = await getBill(selectedWorkOrderId, filters.month, filters.year);
+      const { data } = await getBill(
+        selectedWorkOrderId,
+        filters.month,
+        filters.year,
+        selectedVehicleId || undefined,
+        partyName || undefined,
+        siteLocation || undefined,
+      );
       setBill(unwrapEnvelope(data));
     } catch {
       setBill(null);
@@ -132,11 +209,18 @@ export default function BillingPage() {
     if (!selectedWorkOrderId) return;
     setIsDownloading(true);
     try {
-      const response = await downloadBillPdf(selectedWorkOrderId, filters.month, filters.year);
+      const response = await downloadBillPdf(
+        selectedWorkOrderId,
+        filters.month,
+        filters.year,
+        selectedVehicleId || undefined,
+        partyName || undefined,
+        siteLocation || undefined,
+      );
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
-      const safeWoNumber = (selectedWorkOrder?.woNumber || "WO").replace(/[\\/]/g, "-");
+      const safeWoNumber = (selectedWorkOrder?.woNumber || bill?.woNumber || "WO").replace(/[\\/]/g, "-");
       link.href = url;
       link.download = `Bill_${safeWoNumber}_${filters.month}_${filters.year}.pdf`;
       document.body.appendChild(link);
@@ -155,8 +239,9 @@ export default function BillingPage() {
     const message = [
       t("fleet.billing.companyName"),
       t("fleet.billing.billTitle"),
-      `${t("fleet.billing.party")}: ${bill.partyName || selectedWorkOrder?.partyName || "—"}`,
-      `${t("fleet.billing.workOrder")}: ${selectedWorkOrder?.woNumber || "—"}`,
+      `${t("fleet.billing.party")}: ${bill.partyName || partyName || selectedWorkOrder?.partyName || "—"}`,
+      `${t("fleet.billing.workOrder")}: ${bill.woNumber || selectedWorkOrder?.woNumber || "—"}`,
+      `${t("fleet.billing.site")}: ${bill.siteLocation || siteLocation || selectedWorkOrder?.siteLocation || "—"}`,
       `${t("fleet.billing.period")}: ${monthLabel} ${filters.year}`,
       `${t("fleet.billing.total")}: ₹${totalAmount.toLocaleString("en-IN")}`,
     ].join("\n");
@@ -164,7 +249,14 @@ export default function BillingPage() {
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  const vehicles = Array.isArray(bill?.vehicles) ? bill.vehicles : Array.isArray(bill?.items) ? bill.items : [];
+  const lineItems = Array.isArray(bill?.lineItems)
+    ? bill.lineItems
+    : Array.isArray(bill?.vehicles)
+      ? bill.vehicles
+      : Array.isArray(bill?.items)
+        ? bill.items
+        : [];
+
   const totalAmount = Number(bill?.totalAmount ?? bill?.total ?? 0);
   const monthLabel = t(`fleet.diesel.months.${filters.month}`);
   const amountWordsText =
@@ -181,45 +273,64 @@ export default function BillingPage() {
             label={t("fleet.billing.workOrder")}
             options={workOrderOptions}
             value={selectedWorkOrderId}
-            onChange={(e) => setSelectedWorkOrderId(e.target.value)}
-          />
-          <Select
-            label={t("fleet.billing.month")}
-            options={monthOptions}
-            value={filters.month}
-            onChange={(e) => setFilters((f) => ({ ...f, month: Number(e.target.value) }))}
-          />
-          <Select
-            label={t("fleet.billing.year")}
-            options={yearOptions}
-            value={filters.year}
-            onChange={(e) => setFilters((f) => ({ ...f, year: Number(e.target.value) }))}
+            onChange={(e) => handleWorkOrderChange(e.target.value)}
+            placeholder={t("fleet.dailyLog.filters.allWorkOrders") || "Select Work Order"}
           />
 
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-zinc-700">{t("fleet.billing.partyName")}</span>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-              {selectedWorkOrder?.partyName || "—"}
+          <SearchableSelect
+            label={t("fleet.billing.selectVehicle") || "Select Vehicle"}
+            options={vehicleOptions}
+            value={selectedVehicleId}
+            onChange={(e) => setSelectedVehicleId(e.target.value)}
+            placeholder={t("fleet.billing.allVehicles") || "All Vehicles"}
+            searchPlaceholder={t("fleet.dailyLog.form.searchVehicle") || "Search vehicle..."}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label={t("fleet.billing.month")}
+              options={monthOptions}
+              value={filters.month}
+              onChange={(e) => setFilters((f) => ({ ...f, month: Number(e.target.value) }))}
+            />
+            <Select
+              label={t("fleet.billing.year")}
+              options={yearOptions}
+              value={filters.year}
+              onChange={(e) => setFilters((f) => ({ ...f, year: Number(e.target.value) }))}
+            />
+          </div>
+
+          <Input
+            label={t("fleet.billing.partyName")}
+            value={partyName}
+            onChange={(e) => setPartyName(e.target.value)}
+            placeholder={t("fleet.billing.partyNamePlaceholder") || "Enter party name"}
+          />
+
+          <Input
+            label={t("fleet.billing.siteLocation")}
+            value={siteLocation}
+            onChange={(e) => setSiteLocation(e.target.value)}
+            placeholder={t("fleet.billing.siteLocationPlaceholder") || "Enter site location"}
+          />
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-zinc-700">{t("fleet.billing.billingBasis")}</span>
+              <div className="flex h-9 items-center rounded-md border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-700">
+                {selectedWorkOrder ? (
+                  <Badge variant="zinc">{billingBasisLabel(selectedWorkOrder.billingBasis)}</Badge>
+                ) : (
+                  <span className="text-zinc-400">—</span>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-zinc-700">{t("fleet.billing.siteLocation")}</span>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-              {selectedWorkOrder?.siteLocation || "—"}
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-zinc-700">{t("fleet.billing.billingBasis")}</span>
-            {selectedWorkOrder ? (
-              <Badge variant="zinc">{billingBasisLabel(selectedWorkOrder.billingBasis)}</Badge>
-            ) : (
-              <span className="text-sm text-zinc-400">—</span>
-            )}
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-zinc-700">{t("fleet.billing.rate")}</span>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
-              {selectedWorkOrder ? formatRate(selectedWorkOrder.billingBasis, selectedWorkOrder.rate) : "—"}
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-zinc-700">{t("fleet.billing.rate")}</span>
+              <div className="flex h-9 items-center rounded-md border border-zinc-200 bg-zinc-50 px-3 text-sm font-medium text-zinc-700">
+                {selectedWorkOrder ? formatRate(selectedWorkOrder.billingBasis, selectedWorkOrder.rate) : "—"}
+              </div>
             </div>
           </div>
 
@@ -241,15 +352,15 @@ export default function BillingPage() {
                 <div className="mt-4 grid grid-cols-1 gap-1 text-left text-sm text-zinc-700 sm:grid-cols-2">
                   <p>
                     <span className="font-medium">{t("fleet.billing.party")}:</span>{" "}
-                    {bill.partyName || selectedWorkOrder?.partyName || "—"}
+                    {bill.partyName || partyName || selectedWorkOrder?.partyName || "—"}
                   </p>
                   <p>
                     <span className="font-medium">{t("fleet.billing.workOrder")}:</span>{" "}
-                    {selectedWorkOrder?.woNumber || "—"}
+                    {bill.woNumber || selectedWorkOrder?.woNumber || "—"}
                   </p>
                   <p>
                     <span className="font-medium">{t("fleet.billing.site")}:</span>{" "}
-                    {bill.siteLocation || selectedWorkOrder?.siteLocation || "—"}
+                    {bill.siteLocation || siteLocation || selectedWorkOrder?.siteLocation || "—"}
                   </p>
                   <p>
                     <span className="font-medium">{t("fleet.billing.period")}:</span> {monthLabel} {filters.year}
@@ -271,22 +382,26 @@ export default function BillingPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100">
-                    {vehicles.length === 0 ? (
+                    {lineItems.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
                           {t("fleet.billing.noBillData")}
                         </td>
                       </tr>
                     ) : (
-                      vehicles.map((row, idx) => (
+                      lineItems.map((row, idx) => (
                         <tr key={row.vehicleId ?? idx}>
                           <td className="px-3 py-2">{idx + 1}</td>
-                          <td className="px-3 py-2">{row.vehicleDisplayName || row.vehicleNo || "—"}</td>
-                          <td className="px-3 py-2">{typeLabel(row.type)}</td>
+                          <td className="px-3 py-2 font-medium text-zinc-900">
+                            {row.vehicleDisplayName || row.vehicleNo || "—"}
+                          </td>
+                          <td className="px-3 py-2">{typeLabel(row.vehicleType || row.type)}</td>
                           <td className="px-3 py-2">{qtyLabel(row)}</td>
                           <td className="px-3 py-2">{unitLabel(row.unit || selectedWorkOrder?.billingBasis)}</td>
                           <td className="px-3 py-2">₹{Number(row.rate ?? 0).toLocaleString("en-IN")}</td>
-                          <td className="px-3 py-2 text-right">₹{Number(row.amount ?? 0).toLocaleString("en-IN")}</td>
+                          <td className="px-3 py-2 text-right font-medium text-zinc-900">
+                            ₹{Number(row.amount ?? 0).toLocaleString("en-IN")}
+                          </td>
                         </tr>
                       ))
                     )}
